@@ -1,1 +1,0 @@
-git cherry-pick <commit-hash> --no-commit
