@@ -1,0 +1,200 @@
+.appShell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  background: #0b1020;
+  color: #e8eefc;
+}
+
+.appNav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+  background: rgba(11, 16, 32, 0.85);
+  border-bottom: 1px solid rgba(232, 238, 252, 0.12);
+}
+
+.appNavInner {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.brandDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #7c3aed, #22c55e);
+  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.16);
+}
+
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: rgba(232, 238, 252, 0.86);
+  border: 1px solid transparent;
+}
+
+.navLink:hover {
+  background: rgba(232, 238, 252, 0.06);
+  border-color: rgba(232, 238, 252, 0.12);
+}
+
+.navLinkActive {
+  background: rgba(124, 58, 237, 0.18);
+  border-color: rgba(124, 58, 237, 0.35);
+  color: #ffffff;
+}
+
+.appMain {
+  max-width: 1080px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px 16px 36px;
+}
+
+.pageHeader {
+  margin-bottom: 16px;
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.pageSubtitle {
+  margin: 6px 0 0;
+  color: rgba(232, 238, 252, 0.7);
+  line-height: 1.4;
+  font-size: 14px;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(232, 238, 252, 0.12);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 840px) {
+  .grid2 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.labelRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.label {
+  font-size: 13px;
+  color: rgba(232, 238, 252, 0.86);
+  font-weight: 600;
+}
+
+.hint {
+  font-size: 12px;
+  color: rgba(232, 238, 252, 0.55);
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(232, 238, 252, 0.14);
+  background: rgba(0, 0, 0, 0.18);
+  color: #e8eefc;
+  padding: 10px 12px;
+  outline: none;
+}
+
+.textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  border-color: rgba(124, 58, 237, 0.6);
+  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.15);
+}
+
+.actionsRow {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.button {
+  border: 1px solid rgba(232, 238, 252, 0.16);
+  background: rgba(232, 238, 252, 0.08);
+  color: #ffffff;
+  padding: 10px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 650;
+}
+
+.buttonPrimary {
+  border-color: rgba(34, 197, 94, 0.35);
+  background: rgba(34, 197, 94, 0.16);
+}
+
+.button:hover {
+  filter: brightness(1.05);
+}
+
+.toast {
+  margin-top: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(34, 197, 94, 0.28);
+  background: rgba(34, 197, 94, 0.12);
+  padding: 10px 12px;
+  color: rgba(232, 238, 252, 0.92);
+  font-size: 13px;
+}
+
