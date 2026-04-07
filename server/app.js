@@ -2,8 +2,9 @@ const createError = require("http-errors");
 const express = require("express");
 const path = require("path");
 const cookieParser = require("cookie-parser");
-const logger = require("morgan");
+const pinoHttp = require("pino-http");
 
+const { logger } = require("./utils/logger");
 const indexRouter = require("./routes/index");
 const usersRouter = require("./routes/users");
 
@@ -13,7 +14,22 @@ const app = express();
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "jade");
 
-app.use(logger("dev"));
+app.use(
+  pinoHttp({
+    logger,
+    autoLogging: true,
+    customLogLevel: (_req, res, err) => {
+      if (res.statusCode >= 500 || err) {
+        return "error";
+      }
+      if (res.statusCode >= 400) {
+        return "warn";
+      }
+      return "info";
+    },
+  }),
+);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
