@@ -16,23 +16,49 @@ module.exports = (sequelize) => {
         references: { model: "users", key: "id" },
       },
       preferred_sleep_schedule: {
-        type: DataTypes.STRING(64),
+        type: DataTypes.ENUM("early_bird", "night_owl", "no_preference"),
         allowNull: true,
       },
       preferred_cleanliness_level: {
-        type: DataTypes.STRING(64),
-        allowNull: true,
-      },
-      preferred_study_preferences: {
-        type: DataTypes.STRING(64),
+        type: DataTypes.ENUM(
+          "very_neat",
+          "clean",
+          "average",
+          "relaxed",
+          "no_preference",
+        ),
         allowNull: true,
       },
       preferred_noise_tolerance: {
-        type: DataTypes.STRING(64),
+        type: DataTypes.ENUM(
+          "very_sensitive",
+          "sensitive",
+          "moderate",
+          "tolerant",
+          "no_preference",
+        ),
+        allowNull: true,
+      },
+      preferred_smoking_preference: {
+        type: DataTypes.ENUM("yes", "no", "no_preference"),
+        allowNull: true,
+      },
+      preferred_drinking_preference: {
+        type: DataTypes.ENUM("yes", "no", "no_preference"),
         allowNull: true,
       },
       preferred_social_behavior: {
-        type: DataTypes.STRING(64),
+        type: DataTypes.ENUM(
+          "very_social",
+          "social",
+          "moderate",
+          "introverted",
+          "no_preference",
+        ),
+        allowNull: true,
+      },
+      preferred_study_preferences: {
+        type: DataTypes.ENUM("studious", "moderate", "casual", "no_preference"),
         allowNull: true,
       },
     },
@@ -40,6 +66,5 @@ module.exports = (sequelize) => {
       tableName: "match_preferences",
     },
   );
-
   return MatchPreference;
 };

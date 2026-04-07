@@ -25,10 +25,13 @@ const User = require("./User")(sequelize);
 const Profile = require("./Profile")(sequelize);
 const MatchPreference = require("./MatchPreference")(sequelize);
 const Chat = require("./Chat")(sequelize);
-const ChatParticipant = require("./ChatParticipant")(sequelize);
 const Message = require("./Message")(sequelize);
 
-User.hasOne(Profile, { foreignKey: "user_id", as: "profile", onDelete: "CASCADE" });
+User.hasOne(Profile, {
+  foreignKey: "user_id",
+  as: "profile",
+  onDelete: "CASCADE",
+});
 Profile.belongsTo(User, { foreignKey: "user_id" });
 
 User.hasOne(MatchPreference, {
@@ -37,22 +40,6 @@ User.hasOne(MatchPreference, {
   onDelete: "CASCADE",
 });
 MatchPreference.belongsTo(User, { foreignKey: "user_id" });
-
-User.hasMany(ChatParticipant, { foreignKey: "user_id" });
-Chat.hasMany(ChatParticipant, { foreignKey: "chat_id" });
-ChatParticipant.belongsTo(User, { foreignKey: "user_id" });
-ChatParticipant.belongsTo(Chat, { foreignKey: "chat_id" });
-
-User.belongsToMany(Chat, {
-  through: ChatParticipant,
-  foreignKey: "user_id",
-  otherKey: "chat_id",
-});
-Chat.belongsToMany(User, {
-  through: ChatParticipant,
-  foreignKey: "chat_id",
-  otherKey: "user_id",
-});
 
 Chat.hasMany(Message, { foreignKey: "chat_id", as: "messages" });
 Message.belongsTo(Chat, { foreignKey: "chat_id" });
@@ -77,6 +64,5 @@ module.exports = {
   Profile,
   MatchPreference,
   Chat,
-  ChatParticipant,
   Message,
 };
