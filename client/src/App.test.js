@@ -12,3 +12,14 @@ test('shows Profile View badge on profile page', async () => {
   const badge = await screen.findByText(/profile view/i);
   expect(badge).toBeInTheDocument();
 });
+
+test('shows preferences page headline', async () => {
+  render(
+    <MemoryRouter initialEntries={['/preferences']}>
+      <App />
+    </MemoryRouter>,
+  );
+
+  const headline = await screen.findByText(/curate your/i);
+  expect(headline).toBeInTheDocument();
+});
