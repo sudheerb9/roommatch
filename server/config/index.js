@@ -28,6 +28,9 @@ const config = {
   logging: {
     level: readEnv("LOG_LEVEL", nodeEnv === "development" ? "debug" : "info"),
   },
+  auth: {
+    jwtSecret: readEnv("AUTH_JWT_SECRET", "roommatch-dev-secret"),
+  },
   db: {
     host: readEnv("DB_HOST", "127.0.0.1"),
     port: parseInt(readEnv("DB_PORT", "3306"), 10),
