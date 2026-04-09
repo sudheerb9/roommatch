@@ -10,6 +10,7 @@ import AppLayout from './app/AppLayout';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import HomeRedirect from './pages/HomeRedirect';
+import ChatPage from './pages/ChatPage';
 import PreferencesPage from './pages/PreferencesPage';
 import ProfilePage from './pages/ProfilePage';
 import './pages/Pages.css';
@@ -52,21 +53,18 @@ function Placeholder({ title }) {
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route element={<AppLayout />}>
-          <Route path="/" element={<HomeRedirect />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route
-            path="/preferences"
-            element={<Placeholder title="Roommate preferences" />}
-          />
-          <Route path="/chat" element={<Placeholder title="Chat" />} />
-          <Route path="*" element={<Navigate to="/profile" replace />} />
-        </Route>
-        <Route path="/home/*" element={<AppRoutes />} />
-      </Routes>
-    </Router>
+    <Routes>
+      <Route element={<AppLayout />}>
+        <Route path="/" element={<HomeRedirect />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route
+          path="/preferences"
+          element={<PreferencesPage />}
+        />
+        <Route path="/chat" element={<ChatPage />} />
+        <Route path="*" element={<Navigate to="/profile" replace />} />
+      </Route>
+    </Routes>
   );
 }
 
