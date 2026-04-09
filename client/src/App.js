@@ -1,21 +1,40 @@
-import { useState } from 'react';
+import {
+  Navigate,
+  Route,
+  BrowserRouter as Router,
+  Routes,
+  useNavigate,
+} from 'react-router-dom';
 import './App.css';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import './pages/Pages.css';
 
-function App() {
-  const [activePage, setActivePage] = useState('home');
+function AppRoutes() {
+  const navigate = useNavigate();
 
   return (
-    <div className="App">
-      {activePage === 'home' && (
-        <HomePage onLoginClick={() => setActivePage('login')} />
-      )}
-      {activePage === 'login' && (
-        <LoginPage onBack={() => setActivePage('home')} />
-      )}
-    </div>
+    <Routes>
+      <Route
+        path="/"
+        element={<HomePage onLoginClick={() => navigate('/login')} />}
+      />
+      <Route
+        path="/login"
+        element={<LoginPage onBack={() => navigate('/')} />}
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <div className="App">
+        <AppRoutes />
+      </div>
+    </Router>
   );
 }
 
