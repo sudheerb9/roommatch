@@ -1,6 +1,4 @@
 /** @type {import('tailwindcss').Config} */
-const plugin = require('tailwindcss/plugin');
-
 module.exports = {
   darkMode: ['class'],
   content: ['./src/**/*.{js,jsx,ts,tsx}'],
@@ -49,8 +47,8 @@ module.exports = {
       // Animations from frontend branch
       animation: {
         blob: 'blob 7s infinite',
-        'blob animation-delay-2000': 'blob 7s infinite 2s',
-        'blob animation-delay-4000': 'blob 7s infinite 4s',
+        'blob-delay-2': 'blob 7s infinite 2s',
+        'blob-delay-4': 'blob 7s infinite 4s',
       },
       keyframes: {
         blob: {

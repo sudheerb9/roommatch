@@ -9,8 +9,8 @@ function InitialsAvatar({ name }) {
   const initial = (name || 'U').trim().slice(0, 1).toUpperCase();
   return (
     <div className="relative mb-6">
-      <div className="absolute inset-0 rounded-full bg-[#d2b53b] blur opacity-20 scale-110" />
-      <div className="h-32 w-32 rounded-full ring-[6px] ring-white shadow-xl bg-gradient-to-br from-[#d2b53b] to-[#ebd060] flex items-center justify-center text-white text-4xl font-bold relative">
+      <div className="absolute inset-0 scale-110 rounded-full bg-[#881c1c] opacity-20 blur" />
+      <div className="relative flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-[#7a0019] to-[#881c1c] text-4xl font-bold text-white shadow-xl ring-[6px] ring-white">
         {initial}
         <div className="absolute bottom-2 right-1 w-6 h-6 bg-green-500 rounded-full border-[3px] border-white shadow-sm flex items-center justify-center">
           <div className="w-2 h-2 bg-white/50 rounded-full animate-pulse" />
@@ -23,7 +23,7 @@ function InitialsAvatar({ name }) {
 function Skeleton({ className }) {
   return (
     <div
-      className={classNames('animate-pulse rounded-2xl bg-[#ebd98d]/20', className)}
+      className={classNames('animate-pulse rounded-2xl bg-[#881c1c]/10', className)}
     />
   );
 }
@@ -71,7 +71,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center p-6">
-        <div className="bg-white/60 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-[#ebd98d]/30 max-w-xl w-full flex flex-col items-center gap-6">
+        <div className="w-full max-w-xl flex flex-col items-center gap-6 rounded-3xl border border-[#881c1c]/20 bg-white/60 p-8 shadow-xl shadow-[#7a0019]/5 backdrop-blur-xl">
           <Skeleton className="w-32 h-32 rounded-full" />
           <div className="space-y-3 w-full flex flex-col items-center">
             <Skeleton className="h-8 w-48 rounded-xl" />
@@ -100,8 +100,8 @@ export default function ProfilePage() {
             Failed to load profile information.
           </p>
           <Link
-            to="/"
-            className="inline-flex items-center justify-center bg-[#100e06] text-white rounded-xl px-6 py-3 font-medium"
+            to="/home"
+            className="inline-flex items-center justify-center rounded-xl bg-[#881c1c] px-6 py-3 font-medium text-white transition-colors hover:bg-[#7a0019]"
           >
             Go Home
           </Link>
@@ -111,25 +111,22 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="relative overflow-hidden">
-      <div className="fixed top-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-[#ebd98d]/20 rounded-full blur-[100px] pointer-events-none" />
-      <div className="fixed bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-[#ebd060]/10 rounded-full blur-[100px] pointer-events-none" />
-
-      <div className="max-w-5xl mx-auto relative z-10">
-        <div className="flex items-center justify-between mb-8 sm:mb-12">
-          <Link to="/" className="group">
+    <div className="relative">
+      <div className="relative z-10 mx-auto max-w-5xl">
+        <div className="mb-8 flex items-center justify-between sm:mb-12">
+          <Link to="/home" className="group">
             <div className="flex items-center gap-3 pl-2">
-              <div className="w-10 h-10 rounded-full bg-white/80 backdrop-blur shadow-sm flex items-center justify-center text-[#100e06] group-hover:scale-110 group-hover:bg-[#d2b53b] group-hover:text-white transition-all duration-300">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-[#100e06] shadow-sm backdrop-blur transition-all duration-300 group-hover:scale-110 group-hover:bg-[#881c1c] group-hover:text-white">
                 <span className="text-lg leading-none">←</span>
               </div>
-              <span className="font-semibold text-[#100e06]/80 group-hover:text-[#100e06] transition-colors hidden sm:block">
+              <span className="hidden font-semibold text-[#100e06]/80 transition-colors group-hover:text-[#100e06] sm:block">
                 Back
               </span>
             </div>
           </Link>
 
-          <div className="px-4 py-2 bg-white/60 backdrop-blur rounded-full border border-white/50 shadow-sm">
-            <span className="text-xs font-bold tracking-widest uppercase text-[#d2b53b]">
+          <div className="rounded-full border border-[#881c1c]/15 bg-white/60 px-4 py-2 shadow-sm backdrop-blur">
+            <span className="text-xs font-bold uppercase tracking-widest text-[#881c1c]">
               Profile View
             </span>
           </div>
@@ -137,8 +134,8 @@ export default function ProfilePage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-4 flex flex-col gap-6">
-            <div className="bg-white/60 backdrop-blur-xl border border-white/60 rounded-[2.5rem] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#ebd98d]/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+            <div className="group relative overflow-hidden rounded-[2.5rem] border border-white/60 bg-white/60 p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-xl">
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#881c1c]/10 via-transparent to-transparent opacity-0 transition-opacity duration-700 group-hover:opacity-100" />
 
               <div className="flex flex-col items-center text-center relative z-10">
                 <InitialsAvatar name={profile.name} />
@@ -148,18 +145,18 @@ export default function ProfilePage() {
                 </h1>
                 <p className="text-[#100e06]/60 font-medium">{profile.email}</p>
 
-                <div className="w-full h-px bg-gradient-to-r from-transparent via-[#d2b53b]/30 to-transparent my-6" />
+                <div className="my-6 h-px w-full bg-gradient-to-r from-transparent via-[#881c1c]/30 to-transparent" />
 
                 <Link
                   to="/preferences"
-                  className="w-full inline-flex items-center justify-center gap-2 bg-[#100e06] hover:bg-[#2a2a2a] text-[#fbf9f1] h-12 rounded-xl text-base font-medium shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
+                  className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#7a0019] to-[#881c1c] text-base font-medium text-white shadow-lg shadow-[#7a0019]/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[#7a0019]/30"
                 >
                   Edit Preferences
                 </Link>
               </div>
             </div>
 
-            <div className="bg-[#d2b53b] text-[#fbf9f1] rounded-[2rem] p-6 shadow-lg relative overflow-hidden">
+            <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#7a0019] to-[#881c1c] p-6 text-[#fbf9f1] shadow-lg shadow-[#7a0019]/25">
               <div className="absolute -right-4 -bottom-4 opacity-10 text-white text-8xl">
                 ⚡
               </div>
@@ -177,10 +174,10 @@ export default function ProfilePage() {
           </div>
 
           <div className="lg:col-span-8 space-y-6">
-            <div className="bg-white/40 backdrop-blur-md border border-white/60 rounded-[2rem] p-6 sm:p-8 hover:bg-white/50 transition-colors duration-500">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2.5 bg-white rounded-xl shadow-sm border border-[#ebd98d]/20">
-                  <span className="text-[#d2b53b] font-bold">👤</span>
+            <div className="rounded-[2rem] border border-white/60 bg-white/40 p-6 backdrop-blur-md transition-colors duration-500 hover:bg-white/50 sm:p-8">
+              <div className="mb-6 flex items-center gap-3">
+                <div className="rounded-xl border border-[#881c1c]/15 bg-white p-2.5 shadow-sm">
+                  <span className="font-bold text-[#881c1c]">👤</span>
                 </div>
                 <h2 className="text-xl font-bold text-[#100e06]">
                   Personal Details
@@ -188,31 +185,31 @@ export default function ProfilePage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-4 rounded-2xl bg-white/50 border border-white/40 hover:border-[#d2b53b]/30 transition-colors">
-                  <span className="text-xs font-bold text-[#100e06]/40 uppercase tracking-wider block mb-1">
+                <div className="rounded-2xl border border-white/40 bg-white/50 p-4 transition-colors hover:border-[#881c1c]/30">
+                  <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-[#100e06]/40">
                     Occupation
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className="text-[#d2b53b]">💼</span>
+                    <span className="text-[#881c1c]">💼</span>
                     <span className="text-lg font-semibold text-[#100e06]">
                       {profile.occupation}
                     </span>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-white/50 border border-white/40 hover:border-[#d2b53b]/30 transition-colors">
-                  <span className="text-xs font-bold text-[#100e06]/40 uppercase tracking-wider block mb-1">
+                <div className="rounded-2xl border border-white/40 bg-white/50 p-4 transition-colors hover:border-[#881c1c]/30">
+                  <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-[#100e06]/40">
                     Location
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className="text-[#d2b53b]">📍</span>
+                    <span className="text-[#881c1c]">📍</span>
                     <span className="text-lg font-semibold text-[#100e06]">
                       {profile.location}
                     </span>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-white/50 border border-white/40 hover:border-[#d2b53b]/30 transition-colors col-span-1 sm:col-span-2">
+                <div className="col-span-1 rounded-2xl border border-white/40 bg-white/50 p-4 transition-colors hover:border-[#881c1c]/30 sm:col-span-2">
                   <span className="text-xs font-bold text-[#100e06]/40 uppercase tracking-wider block mb-1">
                     Gender
                   </span>
@@ -226,10 +223,10 @@ export default function ProfilePage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white/40 backdrop-blur-md border border-white/60 rounded-[2rem] p-6 hover:bg-white/50 transition-colors">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2.5 bg-white rounded-xl shadow-sm border border-[#ebd98d]/20">
-                    <span className="text-[#d2b53b] font-bold">🏠</span>
+              <div className="rounded-[2rem] border border-white/60 bg-white/40 p-6 backdrop-blur-md transition-colors hover:bg-white/50">
+                <div className="mb-6 flex items-center gap-3">
+                  <div className="rounded-xl border border-[#881c1c]/15 bg-white p-2.5 shadow-sm">
+                    <span className="font-bold text-[#881c1c]">🏠</span>
                   </div>
                   <h2 className="text-lg font-bold text-[#100e06]">
                     Living Habits
@@ -241,10 +238,10 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              <div className="bg-white/40 backdrop-blur-md border border-white/60 rounded-[2rem] p-6 hover:bg-white/50 transition-colors">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2.5 bg-white rounded-xl shadow-sm border border-[#ebd98d]/20">
-                    <span className="text-[#d2b53b] font-bold">🌿</span>
+              <div className="rounded-[2rem] border border-white/60 bg-white/40 p-6 backdrop-blur-md transition-colors hover:bg-white/50">
+                <div className="mb-6 flex items-center gap-3">
+                  <div className="rounded-xl border border-[#881c1c]/15 bg-white p-2.5 shadow-sm">
+                    <span className="font-bold text-[#881c1c]">🌿</span>
                   </div>
                   <h2 className="text-lg font-bold text-[#100e06]">Lifestyle</h2>
                 </div>

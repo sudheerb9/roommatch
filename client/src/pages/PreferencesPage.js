@@ -77,7 +77,7 @@ function SelectField({ id, label, icon, value, field, options, onChange }) {
         id={id}
         value={value}
         onChange={(e) => onChange(field, e.target.value)}
-        className="w-full h-12 px-4 bg-white/70 border border-transparent focus:border-[#d2b53b]/50 focus:bg-white focus:ring-4 focus:ring-[#d2b53b]/10 rounded-2xl transition-all duration-300 font-medium text-[#100e06] shadow-sm hover:bg-white/90 appearance-none cursor-pointer"
+        className="h-12 w-full cursor-pointer appearance-none rounded-2xl border border-transparent bg-white/70 px-4 font-medium text-[#100e06] shadow-sm transition-all duration-300 hover:bg-white/90 focus:border-[#881c1c]/40 focus:bg-white focus:ring-4 focus:ring-[#881c1c]/10"
       >
         {options.map((opt) => (
           <option key={opt.value || 'empty'} value={opt.value}>
@@ -127,13 +127,10 @@ export default function PreferencesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-[70vh] bg-[#fbf9f1] flex items-center justify-center overflow-hidden relative">
-        <div className="absolute top-20 left-10 w-64 h-64 bg-[#ebd98d]/30 rounded-full blur-[100px] animate-pulse" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-[#d2b53b]/20 rounded-full blur-[120px] animate-pulse" />
-
-        <div className="bg-white/40 backdrop-blur-md rounded-3xl p-8 shadow-2xl border border-white/50 relative z-10">
+      <div className="relative flex min-h-[70vh] items-center justify-center overflow-hidden">
+        <div className="relative z-10 rounded-3xl border border-[#881c1c]/15 bg-white/50 p-8 shadow-xl shadow-[#7a0019]/5 backdrop-blur-md">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-12 h-12 border-4 border-[#d2b53b] border-t-transparent rounded-full animate-spin" />
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#881c1c] border-t-transparent" />
             <span className="text-[#100e06] font-medium tracking-wide">
               Loading your preferences…
             </span>
@@ -144,14 +141,8 @@ export default function PreferencesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#fbf9f1] p-4 md:p-8 relative overflow-hidden">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] bg-[#ebd98d]/20 rounded-full blur-[120px]" />
-        <div className="absolute top-[40%] -right-[10%] w-[40%] h-[60%] bg-[#d2b53b]/10 rounded-full blur-[100px]" />
-        <div className="absolute -bottom-[20%] left-[20%] w-[60%] h-[40%] bg-[#ebd060]/15 rounded-full blur-[100px]" />
-      </div>
-
-      <div className="max-w-3xl mx-auto relative z-10">
+    <div className="relative p-4 md:p-8">
+      <div className="relative z-10 mx-auto max-w-3xl">
         <div className="mb-8 md:mb-12">
           <Link
             to="/profile"
@@ -164,8 +155,11 @@ export default function PreferencesPage() {
           </Link>
 
           <div className="text-center space-y-3">
-            <h1 className="text-4xl md:text-5xl font-bold text-[#100e06]">
-              Curate Your <span className="text-[#d2b53b]">Vibe</span>
+            <h1 className="text-4xl font-bold text-[#100e06] md:text-5xl">
+              Curate Your{' '}
+              <span className="bg-gradient-to-r from-[#7a0019] to-[#881c1c] bg-clip-text text-transparent">
+                Vibe
+              </span>
             </h1>
             <p className="text-[#100e06]/60 text-lg max-w-lg mx-auto leading-relaxed">
               Tell us what you prefer in a roommate so we can rank better
@@ -175,13 +169,13 @@ export default function PreferencesPage() {
           </div>
         </div>
 
-        <div className="bg-white/60 backdrop-blur-xl rounded-[2.5rem] p-6 md:p-10 shadow-xl border border-white/60 relative overflow-hidden">
+        <div className="relative overflow-hidden rounded-[2.5rem] border border-[#881c1c]/10 bg-white/60 p-6 shadow-xl shadow-[#7a0019]/5 backdrop-blur-xl md:p-10">
           <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-transparent opacity-50 pointer-events-none" />
 
           <form onSubmit={handleSubmit} className="space-y-10 relative">
             <div className="space-y-6">
-              <div className="flex items-center gap-3 border-b border-[#ebd98d]/30 pb-4 mb-2">
-                <div className="p-2.5 bg-[#d2b53b]/10 rounded-2xl text-[#d2b53b] text-xl">
+              <div className="mb-2 flex items-center gap-3 border-b border-[#881c1c]/15 pb-4">
+                <div className="rounded-2xl bg-[#881c1c]/10 p-2.5 text-xl text-[#881c1c]">
                   🏠
                 </div>
                 <h2 className="text-2xl font-bold text-[#100e06]">
@@ -230,8 +224,8 @@ export default function PreferencesPage() {
             </div>
 
             <div className="space-y-6">
-              <div className="flex items-center gap-3 border-b border-[#ebd98d]/30 pb-4 mb-2">
-                <div className="p-2.5 bg-[#d2b53b]/10 rounded-2xl text-[#d2b53b] text-xl">
+              <div className="mb-2 flex items-center gap-3 border-b border-[#881c1c]/15 pb-4">
+                <div className="rounded-2xl bg-[#881c1c]/10 p-2.5 text-xl text-[#881c1c]">
                   🌿
                 </div>
                 <h2 className="text-2xl font-bold text-[#100e06]">
@@ -272,7 +266,7 @@ export default function PreferencesPage() {
 
             {savedMsg ? (
               <div
-                className="rounded-2xl border border-[#d2b53b]/40 bg-[#d2b53b]/10 px-4 py-3 text-sm text-[#100e06]"
+                className="rounded-2xl border border-[#881c1c]/25 bg-[#881c1c]/10 px-4 py-3 text-sm text-[#100e06]"
                 role="status"
               >
                 {savedMsg}
@@ -283,7 +277,7 @@ export default function PreferencesPage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full h-14 bg-[#d2b53b] hover:bg-[#bfa330] disabled:opacity-70 text-white rounded-2xl text-lg font-bold shadow-lg shadow-[#d2b53b]/25 transition-all duration-300 hover:scale-[1.01] hover:shadow-xl flex items-center justify-center gap-2"
+                className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#7a0019] to-[#881c1c] text-lg font-bold text-white shadow-lg shadow-[#7a0019]/25 transition-all duration-300 hover:scale-[1.01] hover:shadow-xl hover:shadow-[#7a0019]/30 disabled:opacity-70"
               >
                 {saving ? (
                   <>
@@ -304,7 +298,7 @@ export default function PreferencesPage() {
         <div className="mt-8 text-center">
           <Link
             to="/profile"
-            className="inline-flex items-center gap-1 text-[#d2b53b] hover:text-[#bfa330] font-medium transition-colors border-b border-transparent hover:border-[#d2b53b]/50 pb-0.5"
+            className="inline-flex items-center gap-1 border-b border-transparent pb-0.5 font-medium text-[#881c1c] transition-colors hover:border-[#881c1c]/50 hover:text-[#7a0019]"
           >
             Back to profile <span className="text-xl">→</span>
           </Link>
