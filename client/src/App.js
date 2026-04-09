@@ -1,9 +1,37 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import {
+  Navigate,
+  Route,
+  BrowserRouter as Router,
+  Routes,
+  useNavigate,
+} from 'react-router-dom';
+import './App.css';
 import AppLayout from './app/AppLayout';
+import HomePage from './pages/HomePage';
+import LoginPage from './pages/LoginPage';
 import HomeRedirect from './pages/HomeRedirect';
 import ChatPage from './pages/ChatPage';
 import PreferencesPage from './pages/PreferencesPage';
 import ProfilePage from './pages/ProfilePage';
+import './pages/Pages.css';
+
+function AppRoutes() {
+  const navigate = useNavigate();
+
+  return (
+    <Routes>
+      <Route
+        path="/"
+        element={<HomePage onLoginClick={() => navigate('/login')} />}
+      />
+      <Route
+        path="/login"
+        element={<LoginPage onBack={() => navigate('/')} />}
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
 
 function Placeholder({ title }) {
   return (
