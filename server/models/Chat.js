@@ -19,6 +19,11 @@ module.exports = (sequelize) => {
         type: DataTypes.JSON,
         allowNull: false,
       },
+      direct_chat_key: {
+        type: DataTypes.STRING(64),
+        allowNull: true,
+        unique: true,
+      },
     },
     {
       tableName: "chats",
@@ -55,6 +60,10 @@ module.exports = (sequelize) => {
           ) {
             throw new Error("direct chat must contain exactly 2 participants");
           }
+
+          if (this.kind === "direct" && !this.direct_chat_key) {
+            throw new Error("direct_chat_key is required for direct chats");
+          }
         },
       },
       hooks: {
@@ -64,8 +73,23 @@ module.exports = (sequelize) => {
               .map((id) => Number(id))
               .sort((a, b) => a - b);
           }
+
+          if (
+            chat.kind === "direct" &&
+            Array.isArray(chat.participant_user_ids) &&
+            chat.participant_user_ids.length === 2
+          ) {
+            chat.direct_chat_key = `${chat.participant_user_ids[0]}:${chat.participant_user_ids[1]}`;
+          }
         },
       },
+      indexes: [
+        {
+          name: "chats_direct_chat_key_idx",
+          fields: ["direct_chat_key"],
+          unique: true,
+        },
+      ],
     },
   );
 

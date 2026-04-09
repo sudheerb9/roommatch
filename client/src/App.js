@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import AppLayout from './app/AppLayout';
 import HomeRedirect from './pages/HomeRedirect';
+import ChatPage from './pages/ChatPage';
 import PreferencesPage from './pages/PreferencesPage';
 import ProfilePage from './pages/ProfilePage';
 
@@ -32,7 +33,7 @@ function App() {
           path="/preferences"
           element={<PreferencesPage />}
         />
-        <Route path="/chat" element={<Placeholder title="Chat" />} />
+        <Route path="/chat" element={<ChatPage />} />
         <Route path="*" element={<Navigate to="/profile" replace />} />
       </Route>
     </Routes>
