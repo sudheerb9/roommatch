@@ -45,6 +45,7 @@ function HomePage({ onLoginClick }) {
                 icon={feature.icon}
                 title={feature.title}
                 description={feature.description}
+                to={feature.to}
               />
             ))}
           </div>

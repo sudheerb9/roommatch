@@ -12,6 +12,7 @@ export const features = [
     title: 'Set Your Preferences',
     description:
       'Customize your living preferences, budget, and lifestyle choices to find the perfect match. Tell us what matters most to you in a roommate.',
+    to: '/preferences',
   },
   {
     icon: Search,

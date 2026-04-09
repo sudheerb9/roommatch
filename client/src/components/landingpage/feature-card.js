@@ -1,16 +1,9 @@
 import { motion } from 'motion/react';
+import { Link } from 'react-router-dom';
 
-const FeatureCard = ({ icon: Icon, title, description }) => {
-  return (
-    <motion.div
-      className="group h-full"
-      whileHover={{ y: -10 }}
-      initial={{ opacity: 0, scale: 0.9 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.6, type: 'spring', stiffness: 300 }}
-    >
-      <div className="relative bg-white/40 backdrop-blur-md rounded-[2rem] p-10 text-center border border-white/50 hover:border-[#881c1c]/50 transition-all duration-500 shadow-xl hover:shadow-2xl hover:shadow-[#881c1c]/10 h-full flex flex-col overflow-hidden">
+const FeatureCard = ({ icon: Icon, title, description, to }) => {
+  const cardBody = (
+    <div className="relative flex h-full flex-col overflow-hidden rounded-[2rem] border border-white/50 bg-white/40 p-10 text-center shadow-xl backdrop-blur-md transition-all duration-500 hover:border-[#881c1c]/50 hover:shadow-2xl hover:shadow-[#881c1c]/10">
         {/* Hover Gradient Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#7a0019]/0 to-[#881c1c]/0 group-hover:from-[#7a0019]/10 group-hover:to-[#881c1c]/5 transition-all duration-500"></div>
 
@@ -26,10 +19,31 @@ const FeatureCard = ({ icon: Icon, title, description }) => {
           {title}
         </h3>
 
-        <p className="relative text-[#100e06]/70 leading-relaxed flex-grow font-medium">
+        <p className="relative flex-grow font-medium leading-relaxed text-[#100e06]/70">
           {description}
         </p>
       </div>
+  );
+
+  return (
+    <motion.div
+      className="group h-full"
+      whileHover={{ y: -10 }}
+      initial={{ opacity: 0, scale: 0.9 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6, type: 'spring', stiffness: 300 }}
+    >
+      {to ? (
+        <Link
+          to={to}
+          className="block h-full cursor-pointer rounded-[2rem] text-inherit no-underline outline-none focus-visible:ring-2 focus-visible:ring-[#881c1c]/50 focus-visible:ring-offset-2"
+        >
+          {cardBody}
+        </Link>
+      ) : (
+        cardBody
+      )}
     </motion.div>
   );
 };
