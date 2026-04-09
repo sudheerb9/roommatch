@@ -21,7 +21,6 @@ module.exports = (sequelize) => {
       },
       preferred_cleanliness_level: {
         type: DataTypes.ENUM(
-          "very_neat",
           "clean",
           "average",
           "relaxed",
@@ -31,7 +30,6 @@ module.exports = (sequelize) => {
       },
       preferred_noise_tolerance: {
         type: DataTypes.ENUM(
-          "very_sensitive",
           "sensitive",
           "moderate",
           "tolerant",
@@ -49,7 +47,6 @@ module.exports = (sequelize) => {
       },
       preferred_social_behavior: {
         type: DataTypes.ENUM(
-          "very_social",
           "social",
           "moderate",
           "introverted",

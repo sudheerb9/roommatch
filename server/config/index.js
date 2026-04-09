@@ -31,6 +31,12 @@ const config = {
   auth: {
     jwtSecret: readEnv("AUTH_JWT_SECRET", "roommatch-dev-secret"),
   },
+  redis: {
+    url: readEnv("REDIS_URL", "redis://127.0.0.1:6379"),
+  },
+  matching: {
+    threshold: parseInt(readEnv("MATCHING_THRESHOLD", "80"), 10),
+  },
   db: {
     host: readEnv("DB_HOST", "127.0.0.1"),
     port: parseInt(readEnv("DB_PORT", "3306"), 10),

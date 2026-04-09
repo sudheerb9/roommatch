@@ -36,16 +36,11 @@ module.exports = (sequelize) => {
         allowNull: true,
       },
       cleanliness_level: {
-        type: DataTypes.ENUM("very_neat", "clean", "average", "relaxed"),
+        type: DataTypes.ENUM("clean", "average", "relaxed"),
         allowNull: true,
       },
       noise_tolerance: {
-        type: DataTypes.ENUM(
-          "very_sensitive",
-          "sensitive",
-          "moderate",
-          "tolerant",
-        ),
+        type: DataTypes.ENUM("sensitive", "moderate", "tolerant"),
         allowNull: true,
       },
       smoking_preference: {
@@ -57,12 +52,7 @@ module.exports = (sequelize) => {
         allowNull: true,
       },
       social_behavior: {
-        type: DataTypes.ENUM(
-          "very_social",
-          "social",
-          "moderate",
-          "introverted",
-        ),
+        type: DataTypes.ENUM("social", "moderate", "introverted"),
         allowNull: true,
       },
       study_preferences: {
