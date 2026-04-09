@@ -10,6 +10,7 @@ import AppLayout from './app/AppLayout';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import HomeRedirect from './pages/HomeRedirect';
+import PreferencesPage from './pages/PreferencesPage';
 import ProfilePage from './pages/ProfilePage';
 import './pages/Pages.css';
 
