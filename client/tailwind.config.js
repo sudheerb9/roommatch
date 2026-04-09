@@ -6,7 +6,6 @@ module.exports = {
   content: ['./src/**/*.{js,jsx,ts,tsx}'],
   theme: {
     extend: {
-      // Colors and border radius from main
       colors: {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
