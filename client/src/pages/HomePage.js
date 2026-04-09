@@ -12,8 +12,8 @@ function HomePage({ onLoginClick }) {
       {/* Background Gradients */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#7a0019] rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute top-0 -right-4 w-96 h-96 bg-[#881c1c] rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-32 left-20 w-96 h-96 bg-[#a0252a] rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+        <div className="absolute top-0 -right-4 h-96 w-96 animate-blob-delay-2 rounded-full bg-[#881c1c] opacity-20 mix-blend-multiply blur-3xl filter" />
+        <div className="absolute -bottom-32 left-20 h-96 w-96 animate-blob-delay-4 rounded-full bg-[#a0252a] opacity-20 mix-blend-multiply blur-3xl filter" />
       </div>
 
       <div className="container mx-auto px-6 py-12 relative z-10">
@@ -45,6 +45,7 @@ function HomePage({ onLoginClick }) {
                 icon={feature.icon}
                 title={feature.title}
                 description={feature.description}
+                to={feature.to}
               />
             ))}
           </div>

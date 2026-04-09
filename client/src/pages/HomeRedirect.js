@@ -1,6 +1,5 @@
 import { Navigate } from 'react-router-dom';
 
 export default function HomeRedirect() {
-  return <Navigate to="/profile" replace />;
+  return <Navigate to="/home" replace />;
 }
-
