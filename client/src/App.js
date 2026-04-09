@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import AppLayout from './app/AppLayout';
 import HomeRedirect from './pages/HomeRedirect';
 import ChatPage from './pages/ChatPage';
+import PreferencesPage from './pages/PreferencesPage';
 import ProfilePage from './pages/ProfilePage';
 
 function Placeholder({ title }) {
@@ -30,7 +31,7 @@ function App() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route
           path="/preferences"
-          element={<Placeholder title="Roommate preferences" />}
+          element={<PreferencesPage />}
         />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="*" element={<Navigate to="/profile" replace />} />
