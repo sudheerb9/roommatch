@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 const API_BASE_URL =
   process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
@@ -17,6 +18,7 @@ const btnPrimaryClass =
   'rounded-xl bg-gradient-to-r from-[#7a0019] to-[#881c1c] px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-[#7a0019]/20 transition hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60';
 
 export default function ChatPage() {
+  const [searchParams] = useSearchParams();
   const [uiState, setUiState] = useState('loading');
   const [currentUserId, setCurrentUserId] = useState(1);
   const [targetUserId, setTargetUserId] = useState(2);
@@ -29,7 +31,14 @@ export default function ChatPage() {
   const isInputDisabled =
     uiState === 'loading' || uiState === 'error' || !chatId;
 
-  async function bootstrapChat() {
+  async function bootstrapChat(overrideIds = {}) {
+    const activeCurrentUserId =
+      overrideIds.currentUserId != null
+        ? overrideIds.currentUserId
+        : currentUserId;
+    const activeTargetUserId =
+      overrideIds.targetUserId != null ? overrideIds.targetUserId : targetUserId;
+
     setUiState('loading');
     setErrorMessage('');
 
@@ -38,8 +47,8 @@ export default function ChatPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          initiator_user_id: currentUserId,
-          recipient_user_id: targetUserId,
+          initiator_user_id: activeCurrentUserId,
+          recipient_user_id: activeTargetUserId,
         }),
       });
       const chatPayload = await chatResponse.json();
@@ -51,7 +60,7 @@ export default function ChatPage() {
       setChatId(activeChatId);
 
       const messagesResponse = await fetch(
-        `${API_BASE_URL}/chats/${activeChatId}/messages?user_id=${currentUserId}`,
+        `${API_BASE_URL}/chats/${activeChatId}/messages?user_id=${activeCurrentUserId}`,
       );
       const messagesPayload = await messagesResponse.json();
       if (!messagesResponse.ok) {
@@ -61,7 +70,8 @@ export default function ChatPage() {
       const loadedMessages = (messagesPayload.messages || []).map(
         (message) => ({
           id: message.id,
-          sender: message.sender_user_id === currentUserId ? 'me' : 'other',
+          sender:
+            message.sender_user_id === activeCurrentUserId ? 'me' : 'other',
           text: message.body,
           timestamp: message.created_at,
         }),
@@ -76,9 +86,26 @@ export default function ChatPage() {
   }
 
   useEffect(() => {
-    bootstrapChat();
+    const initiatorFromQuery = Number(searchParams.get('initiator'));
+    const recipientFromQuery = Number(searchParams.get('recipient'));
+    const hasValidInitiator =
+      Number.isInteger(initiatorFromQuery) && initiatorFromQuery > 0;
+    const hasValidRecipient =
+      Number.isInteger(recipientFromQuery) && recipientFromQuery > 0;
+
+    if (hasValidInitiator) {
+      setCurrentUserId(initiatorFromQuery);
+    }
+    if (hasValidRecipient) {
+      setTargetUserId(recipientFromQuery);
+    }
+
+    bootstrapChat({
+      currentUserId: hasValidInitiator ? initiatorFromQuery : currentUserId,
+      targetUserId: hasValidRecipient ? recipientFromQuery : targetUserId,
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [searchParams]);
 
   async function handleSend(event) {
     event.preventDefault();
