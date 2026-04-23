@@ -147,12 +147,20 @@ export default function ProfilePage() {
 
                 <div className="my-6 h-px w-full bg-gradient-to-r from-transparent via-[#881c1c]/30 to-transparent" />
 
-                <Link
-                  to="/preferences"
-                  className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#7a0019] to-[#881c1c] text-base font-medium text-white shadow-lg shadow-[#7a0019]/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[#7a0019]/30"
-                >
-                  Edit Preferences
-                </Link>
+                <div className="grid w-full gap-3">
+                  <Link
+                    to="/preferences"
+                    className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#7a0019] to-[#881c1c] text-base font-medium text-white shadow-lg shadow-[#7a0019]/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[#7a0019]/30"
+                  >
+                    Edit Preferences
+                  </Link>
+                  <Link
+                    to="/matches"
+                    className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#881c1c]/20 bg-white/80 text-sm font-semibold text-[#7a0019] transition-all duration-300 hover:border-[#881c1c]/40 hover:bg-white"
+                  >
+                    View Matches
+                  </Link>
+                </div>
               </div>
             </div>
 

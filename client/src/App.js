@@ -5,6 +5,7 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import HomeRedirect from './pages/HomeRedirect';
 import ChatPage from './pages/ChatPage';
+import MatchesPage from './pages/MatchesPage';
 import PreferencesPage from './pages/PreferencesPage';
 import ProfilePage from './pages/ProfilePage';
 import './pages/Pages.css';
@@ -42,6 +43,7 @@ function App() {
         <Route path="/" element={<HomeRedirect />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/preferences" element={<PreferencesPage />} />
+        <Route path="/matches" element={<MatchesPage />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="*" element={<Navigate to="/profile" replace />} />
       </Route>

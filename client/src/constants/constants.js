@@ -19,6 +19,7 @@ export const features = [
     title: 'Find Matching Profiles',
     description:
       'Discover compatible roommates based on your preferences and shared interests. Our smart algorithm ensures you only see relevant matches.',
+    to: '/matches',
   },
   {
     icon: MessageCircle,

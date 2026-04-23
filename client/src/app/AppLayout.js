@@ -36,6 +36,9 @@ function TopNav() {
           <NavLink className={linkClass} to="/preferences">
             Preferences
           </NavLink>
+          <NavLink className={linkClass} to="/matches">
+            Matches
+          </NavLink>
           <NavLink className={linkClass} to="/chat">
             Chat
           </NavLink>
