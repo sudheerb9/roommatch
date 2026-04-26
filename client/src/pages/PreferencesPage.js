@@ -91,6 +91,7 @@ export default function PreferencesPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(EMPTY_PREFS);
+  const [profileDetails, setProfileDetails] = useState({ bio: '', gender: '' });
   const [savedMsg, setSavedMsg] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
 
@@ -101,6 +102,7 @@ export default function PreferencesPage() {
         setErrorMsg(null);
         const payload = await apiFetch('/profile/me');
         const prefs = payload?.preferences || {};
+        const profile = payload?.profile || {};
         const next = { ...EMPTY_PREFS };
         for (const key of Object.keys(EMPTY_PREFS)) {
           const raw = prefs[key];
@@ -108,6 +110,10 @@ export default function PreferencesPage() {
         }
         if (!cancelled) {
           setForm(next);
+          setProfileDetails({
+            bio: profile.bio ?? '',
+            gender: profile.gender ?? '',
+          });
           setLoading(false);
         }
       } catch (err) {
@@ -134,11 +140,13 @@ export default function PreferencesPage() {
 
     try {
       const body = {};
+      body.bio = profileDetails.bio.trim() === '' ? null : profileDetails.bio;
+      body.gender = profileDetails.gender === '' ? null : profileDetails.gender;
       for (const key of Object.keys(EMPTY_PREFS)) {
         body[key] = form[key] === '' ? null : form[key];
       }
       await apiFetch('/profile/me', { method: 'PUT', body });
-      setSavedMsg('Preferences saved.');
+      setSavedMsg('Saved.');
     } catch (err) {
       setErrorMsg(err.message || 'Failed to save preferences');
     } finally {
@@ -202,6 +210,55 @@ export default function PreferencesPage() {
                 {errorMsg}
               </div>
             ) : null}
+            <div className="space-y-6">
+              <div className="mb-2 flex items-center gap-3 border-b border-[#881c1c]/15 pb-4">
+                <div className="rounded-2xl bg-[#881c1c]/10 p-2.5 text-xl text-[#881c1c]">
+                  👤
+                </div>
+                <h2 className="text-2xl font-bold text-[#100e06]">About you</h2>
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-2.5 md:col-span-2">
+                  <label className="ml-1 flex items-center gap-2 text-sm font-medium text-[#100e06]/80">
+                    📝 About me (bio)
+                  </label>
+                  <textarea
+                    value={profileDetails.bio}
+                    onChange={(e) =>
+                      setProfileDetails((p) => ({ ...p, bio: e.target.value }))
+                    }
+                    rows={3}
+                    className="w-full rounded-2xl border border-transparent bg-white/70 px-4 py-3 text-[#100e06] shadow-sm transition-all duration-300 hover:bg-white/90 focus:border-[#881c1c]/40 focus:bg-white focus:ring-4 focus:ring-[#881c1c]/10"
+                    placeholder="Tell roommates what it’s like living with you…"
+                  />
+                  <p className="text-xs text-[#100e06]/45">
+                    Max 2000 characters. Leave blank to clear.
+                  </p>
+                </div>
+
+                <div className="space-y-2.5">
+                  <label className="ml-1 flex items-center gap-2 text-sm font-medium text-[#100e06]/80">
+                    ⚧ Gender
+                  </label>
+                  <select
+                    value={profileDetails.gender}
+                    onChange={(e) =>
+                      setProfileDetails((p) => ({ ...p, gender: e.target.value }))
+                    }
+                    className="h-12 w-full cursor-pointer appearance-none rounded-2xl border border-transparent bg-white/70 px-4 font-medium text-[#100e06] shadow-sm transition-all duration-300 hover:bg-white/90 focus:border-[#881c1c]/40 focus:bg-white focus:ring-4 focus:ring-[#881c1c]/10"
+                  >
+                    <option value="">Select…</option>
+                    <option value="cis_male">Cis male</option>
+                    <option value="cis_female">Cis female</option>
+                    <option value="trans_male">Trans male</option>
+                    <option value="trans_female">Trans female</option>
+                    <option value="non_binary">Non-binary</option>
+                    <option value="prefer_not_to_say">Prefer not to say</option>
+                  </select>
+                </div>
+              </div>
+            </div>
             <div className="space-y-6">
               <div className="mb-2 flex items-center gap-3 border-b border-[#881c1c]/15 pb-4">
                 <div className="rounded-2xl bg-[#881c1c]/10 p-2.5 text-xl text-[#881c1c]">
