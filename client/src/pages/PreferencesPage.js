@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { apiFetch } from '../utils/api';
 
 const EMPTY_PREFS = {
   preferred_sleep_schedule: '',
@@ -21,7 +22,6 @@ const OPTIONS = {
   preferred_cleanliness_level: [
     { value: '', label: 'Select…' },
     { value: 'no_preference', label: 'No preference' },
-    { value: 'very_neat', label: 'Very neat' },
     { value: 'clean', label: 'Clean' },
     { value: 'average', label: 'Average' },
     { value: 'relaxed', label: 'Relaxed' },
@@ -29,7 +29,6 @@ const OPTIONS = {
   preferred_noise_tolerance: [
     { value: '', label: 'Select…' },
     { value: 'no_preference', label: 'No preference' },
-    { value: 'very_sensitive', label: 'Very sensitive' },
     { value: 'sensitive', label: 'Sensitive' },
     { value: 'moderate', label: 'Moderate' },
     { value: 'tolerant', label: 'Tolerant' },
@@ -49,7 +48,6 @@ const OPTIONS = {
   preferred_social_behavior: [
     { value: '', label: 'Select…' },
     { value: 'no_preference', label: 'No preference' },
-    { value: 'very_social', label: 'Very social' },
     { value: 'social', label: 'Social' },
     { value: 'moderate', label: 'Moderate' },
     { value: 'introverted', label: 'Introverted' },
@@ -94,35 +92,58 @@ export default function PreferencesPage() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(EMPTY_PREFS);
   const [savedMsg, setSavedMsg] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
 
   useEffect(() => {
-    const t = setTimeout(() => {
-      setForm({
-        preferred_sleep_schedule: 'no_preference',
-        preferred_cleanliness_level: 'clean',
-        preferred_noise_tolerance: 'moderate',
-        preferred_smoking_preference: 'no_preference',
-        preferred_drinking_preference: 'no_preference',
-        preferred_social_behavior: 'no_preference',
-        preferred_study_preferences: 'moderate',
-      });
-      setLoading(false);
-    }, 450);
-    return () => clearTimeout(t);
+    let cancelled = false;
+    (async () => {
+      try {
+        setErrorMsg(null);
+        const payload = await apiFetch('/profile/me');
+        const prefs = payload?.preferences || {};
+        const next = { ...EMPTY_PREFS };
+        for (const key of Object.keys(EMPTY_PREFS)) {
+          const raw = prefs[key];
+          next[key] = raw === null || raw === undefined ? '' : String(raw);
+        }
+        if (!cancelled) {
+          setForm(next);
+          setLoading(false);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setErrorMsg(err.message || 'Failed to load preferences');
+          setLoading(false);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   function handleChange(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setSaving(true);
     setSavedMsg(null);
-    setTimeout(() => {
+    setErrorMsg(null);
+
+    try {
+      const body = {};
+      for (const key of Object.keys(EMPTY_PREFS)) {
+        body[key] = form[key] === '' ? null : form[key];
+      }
+      await apiFetch('/profile/me', { method: 'PUT', body });
+      setSavedMsg('Preferences saved.');
+    } catch (err) {
+      setErrorMsg(err.message || 'Failed to save preferences');
+    } finally {
       setSaving(false);
-      setSavedMsg('Preferences saved locally (API wiring in a follow-up).');
-    }, 600);
+    }
   }
 
   if (loading) {
@@ -173,6 +194,14 @@ export default function PreferencesPage() {
           <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-transparent opacity-50 pointer-events-none" />
 
           <form onSubmit={handleSubmit} className="space-y-10 relative">
+            {errorMsg ? (
+              <div
+                className="rounded-2xl border border-[#7a0019]/25 bg-[#7a0019]/10 px-4 py-3 text-sm text-[#100e06]"
+                role="alert"
+              >
+                {errorMsg}
+              </div>
+            ) : null}
             <div className="space-y-6">
               <div className="mb-2 flex items-center gap-3 border-b border-[#881c1c]/15 pb-4">
                 <div className="rounded-2xl bg-[#881c1c]/10 p-2.5 text-xl text-[#881c1c]">

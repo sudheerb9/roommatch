@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { apiFetch } from '../utils/api';
 
 function classNames(...xs) {
   return xs.filter(Boolean).join(' ');
@@ -42,31 +43,46 @@ function PrefPill({ label, value }) {
 export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
+  const [details, setDetails] = useState({ bio: '', gender: '' });
+  const [savedPreferences, setSavedPreferences] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
 
   useEffect(() => {
-    // UI-first: mock profile data (replace with real /api/profile later).
-    const t = setTimeout(() => {
-      setProfile({
-        name: 'Sai Teja',
-        email: 'sai85886@umass.edu',
-        occupation: 'Student',
-        location: 'Amherst, MA',
-        gender: 'prefer_not_to_say',
-        preferences: {
-          cleanliness: 'clean',
-          nightOwl: 'night owl',
-          smoker: 'no',
-        },
-      });
-      setLoading(false);
-    }, 400);
-    return () => clearTimeout(t);
-  }, []);
+    let cancelled = false;
+    (async () => {
+      try {
+        setErrorMsg(null);
+        const payload = await apiFetch('/profile/me');
+        if (cancelled) return;
 
-  const genderLabel = useMemo(() => {
-    if (!profile?.gender) return '';
-    return String(profile.gender).replaceAll('_', ' ');
-  }, [profile?.gender]);
+        const user = payload?.user || {};
+        const p = payload?.profile || {};
+        const prefs = payload?.preferences || null;
+
+        setProfile({
+          name: user.display_name || user.email || 'User',
+          email: user.email || '',
+        });
+
+        setDetails({
+          bio: p.bio ?? '',
+          gender: p.gender ?? '',
+        });
+        setSavedPreferences(prefs);
+
+        setLoading(false);
+      } catch (err) {
+        if (!cancelled) {
+          setErrorMsg(err.message || 'Failed to load profile');
+          setLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -187,44 +203,34 @@ export default function ProfilePage() {
                 <div className="rounded-xl border border-[#881c1c]/15 bg-white p-2.5 shadow-sm">
                   <span className="font-bold text-[#881c1c]">👤</span>
                 </div>
-                <h2 className="text-xl font-bold text-[#100e06]">
-                  Personal Details
-                </h2>
+                <h2 className="text-xl font-bold text-[#100e06]">Personal Details</h2>
               </div>
+
+              {errorMsg ? (
+                <div
+                  className="rounded-2xl border border-[#7a0019]/25 bg-[#7a0019]/10 px-4 py-3 text-sm text-[#100e06]"
+                  role="alert"
+                >
+                  {errorMsg}
+                </div>
+              ) : null}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="rounded-2xl border border-white/40 bg-white/50 p-4 transition-colors hover:border-[#881c1c]/30">
                   <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-[#100e06]/40">
-                    Occupation
+                    Bio
                   </span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[#881c1c]">💼</span>
-                    <span className="text-lg font-semibold text-[#100e06]">
-                      {profile.occupation}
-                    </span>
+                  <div className="text-sm font-medium text-[#100e06]/70 leading-relaxed">
+                    {details.bio || '—'}
                   </div>
                 </div>
 
                 <div className="rounded-2xl border border-white/40 bg-white/50 p-4 transition-colors hover:border-[#881c1c]/30">
                   <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-[#100e06]/40">
-                    Location
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[#881c1c]">📍</span>
-                    <span className="text-lg font-semibold text-[#100e06]">
-                      {profile.location}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="col-span-1 rounded-2xl border border-white/40 bg-white/50 p-4 transition-colors hover:border-[#881c1c]/30 sm:col-span-2">
-                  <span className="text-xs font-bold text-[#100e06]/40 uppercase tracking-wider block mb-1">
                     Gender
                   </span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-semibold text-[#100e06] capitalize">
-                      {genderLabel}
-                    </span>
+                  <div className="text-sm font-semibold text-[#100e06] capitalize">
+                    {details.gender ? String(details.gender).replaceAll('_', ' ') : '—'}
                   </div>
                 </div>
               </div>
@@ -237,12 +243,22 @@ export default function ProfilePage() {
                     <span className="font-bold text-[#881c1c]">🏠</span>
                   </div>
                   <h2 className="text-lg font-bold text-[#100e06]">
-                    Living Habits
+                    Your saved preferences
                   </h2>
                 </div>
                 <div className="space-y-3">
-                  <PrefPill label="Cleanliness" value={profile.preferences.cleanliness} />
-                  <PrefPill label="Night owl" value={profile.preferences.nightOwl} />
+                  <PrefPill
+                    label="Sleep schedule"
+                    value={savedPreferences?.preferred_sleep_schedule || '—'}
+                  />
+                  <PrefPill
+                    label="Cleanliness"
+                    value={savedPreferences?.preferred_cleanliness_level || '—'}
+                  />
+                  <PrefPill
+                    label="Noise tolerance"
+                    value={savedPreferences?.preferred_noise_tolerance || '—'}
+                  />
                 </div>
               </div>
 
@@ -254,10 +270,22 @@ export default function ProfilePage() {
                   <h2 className="text-lg font-bold text-[#100e06]">Lifestyle</h2>
                 </div>
                 <div className="space-y-3">
-                  <PrefPill label="Smoker" value={profile.preferences.smoker} />
-                  <div className="flex items-center justify-center p-4 border border-dashed border-[#100e06]/10 rounded-xl text-xs text-[#100e06]/40">
-                    More preferences coming soon
-                  </div>
+                  <PrefPill
+                    label="Smoking"
+                    value={savedPreferences?.preferred_smoking_preference || '—'}
+                  />
+                  <PrefPill
+                    label="Drinking"
+                    value={savedPreferences?.preferred_drinking_preference || '—'}
+                  />
+                  <PrefPill
+                    label="Social behavior"
+                    value={savedPreferences?.preferred_social_behavior || '—'}
+                  />
+                  <PrefPill
+                    label="Study preferences"
+                    value={savedPreferences?.preferred_study_preferences || '—'}
+                  />
                 </div>
               </div>
             </div>
