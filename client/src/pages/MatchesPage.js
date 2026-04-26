@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 const API_BASE_URL =
@@ -33,7 +33,7 @@ export default function MatchesPage() {
   const [items, setItems] = useState([]);
   const [meta, setMeta] = useState(null);
 
-  async function loadMatches(nextPage = page) {
+  const loadMatches = useCallback(async (nextPage = page) => {
     setLoading(true);
     setError('');
 
@@ -56,12 +56,11 @@ export default function MatchesPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [page]);
 
   useEffect(() => {
     loadMatches(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loadMatches]);
 
   const canGoNext = Boolean(meta?.hasMore) && !loading;
   const canGoPrev = page > 1 && !loading;
@@ -149,7 +148,7 @@ export default function MatchesPage() {
         })}
       </div>
     );
-  }, [error, items, loading, navigate, page, validViewerId, viewerUserId]);
+  }, [error, items, loadMatches, loading, navigate, page, validViewerId, viewerUserId]);
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-5">

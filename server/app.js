@@ -10,6 +10,7 @@ const matchesRouter = require("./routes/matches");
 const usersRouter = require("./routes/users");
 const authRouter = require("./routes/auth");
 const chatsRouter = require("./routes/chats");
+const profileRouter = require("./routes/profile");
 
 const app = express();
 const cors = require('cors');
@@ -55,6 +56,7 @@ app.use("/matches", matchesRouter);
 app.use("/users", usersRouter);
 app.use("/auth", authRouter);
 app.use("/chats", chatsRouter);
+app.use("/profile", profileRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
