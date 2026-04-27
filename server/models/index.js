@@ -26,6 +26,12 @@ const Profile = require("./Profile")(sequelize);
 const MatchPreference = require("./MatchPreference")(sequelize);
 const Chat = require("./Chat")(sequelize);
 const Message = require("./Message")(sequelize);
+const Group = require("./Group")(sequelize);
+const GroupMember = require("./GroupMember")(sequelize);
+const GroupInvitation = require("./GroupInvitation")(sequelize);
+const GroupHousingPreference = require("./GroupHousingPreference")(sequelize);
+const HousingUnit = require("./HousingUnit")(sequelize);
+const GroupAssignment = require("./GroupAssignment")(sequelize);
 
 User.hasOne(Profile, {
   foreignKey: "user_id",
@@ -44,6 +50,85 @@ MatchPreference.belongsTo(User, { foreignKey: "user_id" });
 Chat.hasMany(Message, { foreignKey: "chat_id", as: "messages" });
 Message.belongsTo(Chat, { foreignKey: "chat_id" });
 Message.belongsTo(User, { foreignKey: "sender_user_id", as: "sender" });
+
+User.hasMany(Group, {
+  foreignKey: "owner_user_id",
+  as: "ownedGroups",
+  onDelete: "CASCADE",
+});
+Group.belongsTo(User, {
+  foreignKey: "owner_user_id",
+  as: "owner",
+});
+Group.belongsTo(Chat, {
+  foreignKey: "chat_id",
+  as: "groupChat",
+});
+
+Group.hasMany(GroupMember, {
+  foreignKey: "group_id",
+  as: "members",
+  onDelete: "CASCADE",
+});
+GroupMember.belongsTo(Group, { foreignKey: "group_id" });
+GroupMember.belongsTo(User, { foreignKey: "user_id", as: "user" });
+User.hasMany(GroupMember, {
+  foreignKey: "user_id",
+  as: "groupMemberships",
+  onDelete: "CASCADE",
+});
+
+Group.hasMany(GroupInvitation, {
+  foreignKey: "group_id",
+  as: "invitations",
+  onDelete: "CASCADE",
+});
+GroupInvitation.belongsTo(Group, { foreignKey: "group_id" });
+GroupInvitation.belongsTo(User, {
+  foreignKey: "inviter_user_id",
+  as: "inviter",
+});
+GroupInvitation.belongsTo(User, {
+  foreignKey: "invitee_user_id",
+  as: "invitee",
+});
+User.hasMany(GroupInvitation, {
+  foreignKey: "inviter_user_id",
+  as: "sentGroupInvitations",
+  onDelete: "CASCADE",
+});
+User.hasMany(GroupInvitation, {
+  foreignKey: "invitee_user_id",
+  as: "receivedGroupInvitations",
+  onDelete: "CASCADE",
+});
+
+Group.hasOne(GroupHousingPreference, {
+  foreignKey: "group_id",
+  as: "housingPreference",
+  onDelete: "CASCADE",
+});
+GroupHousingPreference.belongsTo(Group, {
+  foreignKey: "group_id",
+});
+
+Group.hasMany(GroupAssignment, {
+  foreignKey: "group_id",
+  as: "assignments",
+  onDelete: "CASCADE",
+});
+GroupAssignment.belongsTo(Group, {
+  foreignKey: "group_id",
+});
+HousingUnit.hasMany(GroupAssignment, {
+  foreignKey: "housing_unit_id",
+  as: "assignments",
+  onDelete: "CASCADE",
+});
+GroupAssignment.belongsTo(HousingUnit, {
+  foreignKey: "housing_unit_id",
+  as: "housingUnit",
+});
 
 async function initDatabase() {
   await sequelize.authenticate();
@@ -65,4 +150,10 @@ module.exports = {
   MatchPreference,
   Chat,
   Message,
+  Group,
+  GroupMember,
+  GroupInvitation,
+  GroupHousingPreference,
+  HousingUnit,
+  GroupAssignment,
 };
