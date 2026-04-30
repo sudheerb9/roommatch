@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { apiFetch } from '../utils/api';
 
-const API_BASE_URL =
-  process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
 const PAGE_LIMIT = 12;
 
 function scoreBadge(score) {
@@ -33,30 +32,30 @@ export default function MatchesPage() {
   const [items, setItems] = useState([]);
   const [meta, setMeta] = useState(null);
 
-  const loadMatches = useCallback(async (nextPage = page) => {
-    setLoading(true);
-    setError('');
+  const loadMatches = useCallback(
+    async (nextPage = page) => {
+      setLoading(true);
+      setError('');
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/matches?page=${nextPage}&limit=${PAGE_LIMIT}`, {
-        credentials: 'include',
-      });
-      const payload = await response.json();
-      if (!response.ok) {
-        throw new Error(payload.error || 'Failed to load matches.');
+      try {
+        const payload = await apiFetch(
+          `/matches?page=${nextPage}&limit=${PAGE_LIMIT}`
+        );
+        setItems(Array.isArray(payload.items) ? payload.items : []);
+        setMeta(payload.meta || null);
+        setPage(nextPage);
+      } catch (requestError) {
+        setItems([]);
+        setMeta(null);
+        setError(
+          requestError.message || 'Unexpected error while loading matches.'
+        );
+      } finally {
+        setLoading(false);
       }
-
-      setItems(Array.isArray(payload.items) ? payload.items : []);
-      setMeta(payload.meta || null);
-      setPage(nextPage);
-    } catch (requestError) {
-      setItems([]);
-      setMeta(null);
-      setError(requestError.message || 'Unexpected error while loading matches.');
-    } finally {
-      setLoading(false);
-    }
-  }, [page]);
+    },
+    [page]
+  );
 
   useEffect(() => {
     loadMatches(1);
@@ -71,7 +70,9 @@ export default function MatchesPage() {
       return (
         <div className="grid min-h-[260px] place-content-center justify-items-center gap-3 rounded-3xl border border-[#881c1c]/10 bg-white/70 p-10">
           <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#881c1c]/20 border-t-[#881c1c]" />
-          <p className="text-sm font-medium text-[#100e06]/70">Loading matches…</p>
+          <p className="text-sm font-medium text-[#100e06]/70">
+            Loading matches…
+          </p>
         </div>
       );
     }
@@ -135,7 +136,7 @@ export default function MatchesPage() {
                   disabled={!validViewerId}
                   onClick={() =>
                     navigate(
-                      `/chat?initiator=${viewerUserId}&recipient=${match.user_id}`,
+                      `/chat?initiator=${viewerUserId}&recipient=${match.user_id}`
                     )
                   }
                   className="rounded-xl bg-gradient-to-r from-[#7a0019] to-[#881c1c] px-4 py-2 text-sm font-semibold text-white shadow-md shadow-[#7a0019]/20 transition hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
@@ -148,7 +149,16 @@ export default function MatchesPage() {
         })}
       </div>
     );
-  }, [error, items, loadMatches, loading, navigate, page, validViewerId, viewerUserId]);
+  }, [
+    error,
+    items,
+    loadMatches,
+    loading,
+    navigate,
+    page,
+    validViewerId,
+    viewerUserId,
+  ]);
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-5">

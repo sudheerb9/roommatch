@@ -26,6 +26,7 @@ const Profile = require("./Profile")(sequelize);
 const MatchPreference = require("./MatchPreference")(sequelize);
 const Chat = require("./Chat")(sequelize);
 const Message = require("./Message")(sequelize);
+const Session = require("./Session")(sequelize);
 const Group = require("./Group")(sequelize);
 const GroupMember = require("./GroupMember")(sequelize);
 const GroupInvitation = require("./GroupInvitation")(sequelize);
@@ -46,6 +47,13 @@ User.hasOne(MatchPreference, {
   onDelete: "CASCADE",
 });
 MatchPreference.belongsTo(User, { foreignKey: "user_id" });
+
+User.hasMany(Session, {
+  foreignKey: "user_id",
+  as: "sessions",
+  onDelete: "CASCADE",
+});
+Session.belongsTo(User, { foreignKey: "user_id" });
 
 Chat.hasMany(Message, { foreignKey: "chat_id", as: "messages" });
 Message.belongsTo(Chat, { foreignKey: "chat_id" });
@@ -150,6 +158,7 @@ module.exports = {
   MatchPreference,
   Chat,
   Message,
+  Session,
   Group,
   GroupMember,
   GroupInvitation,
