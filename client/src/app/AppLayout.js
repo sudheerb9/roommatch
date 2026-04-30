@@ -1,6 +1,6 @@
+import { LogOut } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
 import LandingBackdrop from '../components/layout/LandingBackdrop';
 import { getBearerToken, setBearerToken } from '../utils/api';
 
@@ -15,16 +15,16 @@ function TopNav() {
       await fetch('http://localhost:3001/auth/logout', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${getBearerToken()}`,
+          Authorization: `Bearer ${getBearerToken()}`,
           'Content-Type': 'application/json',
         },
       });
-      
+
       // Clear token from localStorage
       window.localStorage.removeItem('roommatch_bearer_token');
       setBearerToken(null);
       setTokenPreview(null);
-      
+
       // Redirect to home
       navigate('/home');
     } catch (error) {
@@ -85,7 +85,7 @@ function TopNav() {
             onClick={() => {
               const next = window.prompt(
                 'Paste Bearer token (blank to clear):',
-                getBearerToken(),
+                getBearerToken()
               );
               if (next === null) return;
               const stored = setBearerToken(next);
