@@ -1,5 +1,10 @@
 const express = require("express");
 
+const {
+  getGroupMatches,
+  assignGroupHousing,
+  getGroupAssignment,
+} = require("../controllers/groupsController");
 const { authenticate } = require("../middleware/authenticate");
 const { GroupMember, GroupInvitation, User } = require("../models");
 const { assertCanAccessGroup } = require("../utils/groupAccess");
@@ -15,6 +20,11 @@ function parseInviteeUserId(raw) {
   }
   return n;
 }
+
+
+router.get("/:groupId/matches", authenticate, getGroupMatches);
+router.post("/:groupId/assign", authenticate, assignGroupHousing);
+router.get("/:groupId/assignment", authenticate, getGroupAssignment);
 
 /** GET /groups/:groupId/invitations */
 router.get(
