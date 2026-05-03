@@ -12,6 +12,7 @@ const authRouter = require("./routes/auth");
 const chatsRouter = require("./routes/chats");
 const profileRouter = require("./routes/profile");
 const groupsRouter = require("./routes/groups");
+const invitationsRouter = require("./routes/invitations");
 
 const app = express();
 const cors = require("cors");
@@ -72,6 +73,7 @@ app.use("/auth", authRouter);
 app.use("/chats", chatsRouter);
 app.use("/profile", profileRouter);
 app.use("/groups", groupsRouter);
+app.use("/invitations", invitationsRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
