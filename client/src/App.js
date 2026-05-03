@@ -5,6 +5,7 @@ import ChatPage from './pages/ChatPage';
 import HomePage from './pages/HomePage';
 import GroupInvitationComposePage from './pages/GroupInvitationComposePage';
 import GroupInvitationEntryPage from './pages/GroupInvitationEntryPage';
+import GroupInvitationsInboxPage from './pages/GroupInvitationsInboxPage';
 import GroupHousingEntryPage from './pages/GroupHousingEntryPage';
 import GroupHousingPreferencesPage from './pages/GroupHousingPreferencesPage';
 import HomeRedirect from './pages/HomeRedirect';
@@ -70,6 +71,7 @@ function App() {
         <Route path="/preferences" element={<PreferencesPage />} />
         <Route path="/group-housing" element={<GroupHousingEntryPage />} />
         <Route path="/group-invitations" element={<GroupInvitationEntryPage />} />
+        <Route path="/invitations" element={<GroupInvitationsInboxPage />} />
         <Route
           path="/groups/:groupId/invite"
           element={<GroupInvitationComposePage />}

@@ -3,6 +3,7 @@ const express = require("express");
 const { authenticate } = require("../middleware/authenticate");
 const {
   sequelize,
+  Group,
   GroupInvitation,
   GroupMember,
   User,
@@ -10,6 +11,33 @@ const {
 const { asInvitationResponse } = require("../utils/groupInvitationResponse");
 
 const router = express.Router();
+
+/** GET /invitations/mine — invitations addressed to the current user */
+router.get("/mine", authenticate, async function listMyInvitations(req, res, next) {
+  try {
+    const invitations = await GroupInvitation.findAll({
+      where: { invitee_user_id: req.user.id },
+      include: [
+        {
+          model: User,
+          as: "inviter",
+          attributes: ["id", "email", "display_name"],
+        },
+        {
+          model: Group,
+          attributes: ["id", "name", "status"],
+        },
+      ],
+      order: [["created_at", "DESC"]],
+    });
+
+    return res.status(200).json({
+      invitations: invitations.map((inv) => asInvitationResponse(inv)),
+    });
+  } catch (err) {
+    return next(err);
+  }
+});
 
 async function reloadInvitation(invitation) {
   await invitation.reload({
