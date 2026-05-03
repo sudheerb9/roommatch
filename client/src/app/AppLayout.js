@@ -73,6 +73,9 @@ function TopNav() {
           <NavLink className={linkClass} to="/preferences">
             Preferences
           </NavLink>
+          <NavLink className={linkClass} to="/group-housing">
+            Group housing
+          </NavLink>
           <NavLink className={linkClass} to="/matches">
             Matches
           </NavLink>
