@@ -1,9 +1,18 @@
 const express = require("express");
 
+const {
+  getGroupMatches,
+  assignGroupHousing,
+  getGroupAssignment,
+} = require("../controllers/groupsController");
 const { authenticate } = require("../middleware/authenticate");
-const { GroupMember, GroupInvitation, User } = require("../models");
+const { GroupMember, GroupInvitation, User, GroupHousingPreference } = require("../models");
 const { assertCanAccessGroup } = require("../utils/groupAccess");
 const { asInvitationResponse } = require("../utils/groupInvitationResponse");
+const {
+  validateHousingPreferencesPatch,
+  asHousingPreferencesResponse,
+} = require("../utils/groupHousingPreferences");
 
 const router = express.Router();
 
@@ -15,6 +24,11 @@ function parseInviteeUserId(raw) {
   }
   return n;
 }
+
+
+router.get("/:groupId/matches", authenticate, getGroupMatches);
+router.post("/:groupId/assign", authenticate, assignGroupHousing);
+router.get("/:groupId/assignment", authenticate, getGroupAssignment);
 
 /** GET /groups/:groupId/invitations */
 router.get(
@@ -143,6 +157,71 @@ router.post(
       return res
         .status(201)
         .json({ invitation: asInvitationResponse(invitation) });
+    } catch (err) {
+      return next(err);
+    }
+  },
+);
+
+/** GET /groups/:groupId/housing-preferences */
+router.get(
+  "/:groupId/housing-preferences",
+  authenticate,
+  async function getGroupHousingPreferences(req, res, next) {
+    try {
+      const access = await assertCanAccessGroup(req.params.groupId, req.user);
+      if (!access.ok) {
+        return res.status(access.status).json(access.body);
+      }
+
+      const { group } = access;
+      const pref = await GroupHousingPreference.findByPk(group.id);
+      return res.status(200).json({
+        housing_preferences: pref ? asHousingPreferencesResponse(pref) : null,
+      });
+    } catch (err) {
+      return next(err);
+    }
+  },
+);
+
+/** PUT /groups/:groupId/housing-preferences */
+router.put(
+  "/:groupId/housing-preferences",
+  authenticate,
+  async function putGroupHousingPreferences(req, res, next) {
+    try {
+      const access = await assertCanAccessGroup(req.params.groupId, req.user);
+      if (!access.ok) {
+        return res.status(access.status).json(access.body);
+      }
+
+      const { group } = access;
+      const validation = validateHousingPreferencesPatch(req.body);
+      if (!validation.ok) {
+        return res.status(400).json({ error: validation.error });
+      }
+
+      const patch = validation.patch || {};
+      if (Object.keys(patch).length === 0) {
+        const existing = await GroupHousingPreference.findByPk(group.id);
+        return res.status(200).json({
+          housing_preferences: existing
+            ? asHousingPreferencesResponse(existing)
+            : null,
+        });
+      }
+
+      const [prefs] = await GroupHousingPreference.findOrCreate({
+        where: { group_id: group.id },
+      });
+
+      await prefs.update(patch);
+      await prefs.reload();
+
+      return res.status(200).json({
+        housing_preferences: asHousingPreferencesResponse(prefs),
+      });
     } catch (err) {
       return next(err);
     }
