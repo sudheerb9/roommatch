@@ -1,4 +1,4 @@
-const DEFAULT_API_BASE_URL = 'http://localhost:3000';
+const DEFAULT_API_BASE_URL = 'http://localhost:3001';
 
 export function getApiBaseUrl() {
   return (
@@ -81,4 +81,3 @@ export async function apiFetch(path, { method = 'GET', body, token } = {}) {
 
   return payload;
 }
-

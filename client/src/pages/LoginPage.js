@@ -1,71 +1,76 @@
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { ArrowLeft } from 'lucide-react';
 import AuthForm from '../components/custom/AuthForm';
 
 function LoginPage({ onBack }) {
+  const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
+
   return (
-    <div className="min-h-screen bg-white flex flex-col lg:flex-row relative overflow-hidden w-screen left-[calc(-50vw+50%)]">
-      {/* Abstract Background Shapes - Animated and Responsive */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50vh] h-[50vh] bg-[#881c1c]/10 rounded-full blur-[100px] animate-pulse" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40vh] h-[40vh] bg-[#7a0019]/5 rounded-full blur-[80px]" />
+    <GoogleOAuthProvider clientId={googleClientId}>
+      <div className="min-h-screen bg-white flex flex-col lg:flex-row relative overflow-hidden w-screen left-[calc(-50vw+50%)]">
+        {/* Abstract Background Shapes - Animated and Responsive */}
+        <div className="absolute top-[-10%] left-[-10%] w-[50vh] h-[50vh] bg-[#881c1c]/10 rounded-full blur-[100px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40vh] h-[40vh] bg-[#7a0019]/5 rounded-full blur-[80px]" />
 
-      {/* Left Panel - Visual/Brand Area (Hidden on mobile/small screens for cleaner auth focus) */}
-      <div className="hidden lg:flex w-1/2 items-center justify-center p-12 relative z-10">
-        <div className="max-w-lg">
-          <h1 className="text-5xl font-bold text-[#100e06] leading-tight mb-6">
-            Find your perfect <span className="text-[#881c1c]">roomie</span>{' '}
-            today.
-          </h1>
-          <p className="text-lg text-[#100e06]/70 leading-relaxed">
-            Join our community of verified roommates. Connect, chat, and find a
-            place called home with people you trust.
-          </p>
-        </div>
-      </div>
-
-      {/* Right Panel - Auth Form Area */}
-      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 sm:p-12 relative z-10 bg-white/30 sm:bg-transparent backdrop-blur-sm sm:backdrop-blur-none h-screen sm:h-auto lg:h-screen">
-        <div className="w-full max-w-sm mx-auto">
-          {/* Back Button */}
-          <button
-            onClick={onBack}
-            className="inline-flex items-center gap-2 text-[#100e06]/60 hover:text-[#881c1c] transition-colors mb-8 group font-medium text-sm"
-          >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            Back to Home
-          </button>
-
-          <div className="bg-white backdrop-blur-xl rounded-3xl p-8 sm:p-10 shadow-xl border border-[#881c1c]/20 ring-1 ring-[#881c1c]/10 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#7a0019] via-[#881c1c] to-[#7a0019]" />
-
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-[#100e06] mb-2 tracking-tight">
-                Welcome Back
-              </h2>
-              <p className="text-[#100e06]/60 text-sm">
-                Sign in to continue your search
-              </p>
-            </div>
-
-            <AuthForm onLoginClick={() => {}} />
-          </div>
-
-          <div className="mt-8 pt-6 border-t border-[#100e06]/5">
-            <p className="text-center text-xs text-[#100e06]/40 leading-relaxed">
-              By continuing, you simply agree to our{' '}
-              <br className="hidden sm:block" />
-              <span className="font-medium underline cursor-pointer hover:text-[#881c1c] transition-colors">
-                Terms of Service
-              </span>{' '}
-              and{' '}
-              <span className="font-medium underline cursor-pointer hover:text-[#881c1c] transition-colors">
-                Privacy Policy
-              </span>
-              .
+        {/* Left Panel - Visual/Brand Area (Hidden on mobile/small screens for cleaner auth focus) */}
+        <div className="hidden lg:flex w-1/2 items-center justify-center p-12 relative z-10">
+          <div className="max-w-lg">
+            <h1 className="text-5xl font-bold text-[#100e06] leading-tight mb-6">
+              Find your perfect <span className="text-[#881c1c]">roomie</span>{' '}
+              today.
+            </h1>
+            <p className="text-lg text-[#100e06]/70 leading-relaxed">
+              Join our community of verified roommates. Connect, chat, and find
+              a place called home with people you trust.
             </p>
           </div>
         </div>
+
+        {/* Right Panel - Auth Form Area */}
+        <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 sm:p-12 relative z-10 bg-white/30 sm:bg-transparent backdrop-blur-sm sm:backdrop-blur-none h-screen sm:h-auto lg:h-screen">
+          <div className="w-full max-w-sm mx-auto">
+            {/* Back Button */}
+            <button
+              onClick={onBack}
+              className="inline-flex items-center gap-2 text-[#100e06]/60 hover:text-[#881c1c] transition-colors mb-8 group font-medium text-sm"
+            >
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+              Back to Home
+            </button>
+
+            <div className="bg-white backdrop-blur-xl rounded-3xl p-8 sm:p-10 shadow-xl border border-[#881c1c]/20 ring-1 ring-[#881c1c]/10 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#7a0019] via-[#881c1c] to-[#7a0019]" />
+
+              <div className="text-center mb-8">
+                <h2 className="text-2xl font-bold text-[#100e06] mb-2 tracking-tight">
+                  Welcome Back
+                </h2>
+                <p className="text-[#100e06]/60 text-sm">
+                  Sign in to continue your search
+                </p>
+              </div>
+
+              <AuthForm onLoginClick={() => {}} />
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-[#100e06]/5">
+              <p className="text-center text-xs text-[#100e06]/40 leading-relaxed">
+                By continuing, you simply agree to our{' '}
+                <br className="hidden sm:block" />
+                <span className="font-medium underline cursor-pointer hover:text-[#881c1c] transition-colors">
+                  Terms of Service
+                </span>{' '}
+                and{' '}
+                <span className="font-medium underline cursor-pointer hover:text-[#881c1c] transition-colors">
+                  Privacy Policy
+                </span>
+                .
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </GoogleOAuthProvider>
   );
 }
 
