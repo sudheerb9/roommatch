@@ -14,7 +14,7 @@ const profileRouter = require("./routes/profile");
 const groupsRouter = require("./routes/groups");
 
 const app = express();
-const cors = require('cors');
+const cors = require("cors");
 app.use(cors()); // Put this above your routes
 
 // view engine setup
@@ -22,8 +22,21 @@ app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "jade");
 
 app.use(function corsMiddleware(req, res, next) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+  const origin = req.get("Origin") || "http://localhost:3000";
+  const allowedOrigins = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:3002",
+  ];
+
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+  }
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+  );
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "OPTIONS") {
     return res.sendStatus(204);

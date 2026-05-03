@@ -1,10 +1,38 @@
+import { LogOut } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { Link, NavLink, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import LandingBackdrop from '../components/layout/LandingBackdrop';
 import { getBearerToken, setBearerToken } from '../utils/api';
 
 function TopNav() {
   const [tokenPreview, setTokenPreview] = useState(() => getBearerToken());
+  const navigate = useNavigate();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await fetch('http://localhost:3001/auth/logout', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${getBearerToken()}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      // Clear token from localStorage
+      window.localStorage.removeItem('roommatch_bearer_token');
+      setBearerToken(null);
+      setTokenPreview(null);
+
+      // Redirect to home
+      navigate('/home');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   const linkClass = ({ isActive }) =>
     [
@@ -57,7 +85,7 @@ function TopNav() {
             onClick={() => {
               const next = window.prompt(
                 'Paste Bearer token (blank to clear):',
-                getBearerToken(),
+                getBearerToken()
               );
               if (next === null) return;
               const stored = setBearerToken(next);
@@ -66,6 +94,16 @@ function TopNav() {
             title="Used for calling /profile/me and /matches"
           >
             {tokenLabel}
+          </button>
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className="flex items-center gap-2 rounded-xl border border-[#881c1c]/20 bg-white/70 px-4 py-2 text-sm font-medium text-[#100e06]/80 transition-all hover:border-[#881c1c]/35 hover:bg-white hover:text-[#100e06] disabled:opacity-60 disabled:cursor-not-allowed"
+            title="Sign out of your account"
+          >
+            <LogOut className="w-4 h-4" />
+            {isLoggingOut ? 'Logging out...' : 'Logout'}
           </button>
         </nav>
       </div>

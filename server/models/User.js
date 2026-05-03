@@ -25,6 +25,14 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING(120),
         allowNull: true,
       },
+      password_hash: {
+        type: DataTypes.STRING(128),
+        allowNull: true,
+      },
+      password_salt: {
+        type: DataTypes.STRING(32),
+        allowNull: true,
+      },
       is_active: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
