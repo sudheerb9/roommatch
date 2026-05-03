@@ -3,6 +3,8 @@ import './App.css';
 import AppLayout from './app/AppLayout';
 import ChatPage from './pages/ChatPage';
 import HomePage from './pages/HomePage';
+import GroupInvitationComposePage from './pages/GroupInvitationComposePage';
+import GroupInvitationEntryPage from './pages/GroupInvitationEntryPage';
 import GroupHousingEntryPage from './pages/GroupHousingEntryPage';
 import GroupHousingPreferencesPage from './pages/GroupHousingPreferencesPage';
 import HomeRedirect from './pages/HomeRedirect';
@@ -67,6 +69,11 @@ function App() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/preferences" element={<PreferencesPage />} />
         <Route path="/group-housing" element={<GroupHousingEntryPage />} />
+        <Route path="/group-invitations" element={<GroupInvitationEntryPage />} />
+        <Route
+          path="/groups/:groupId/invite"
+          element={<GroupInvitationComposePage />}
+        />
         <Route
           path="/groups/:groupId/housing-preferences"
           element={<GroupHousingPreferencesPage />}
