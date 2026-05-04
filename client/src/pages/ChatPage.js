@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-
-const API_BASE_URL =
-  process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001';
+import { apiFetch } from '../utils/api';
 
 function formatTime(isoTimestamp) {
   return new Date(isoTimestamp).toLocaleTimeString([], {
@@ -11,71 +9,54 @@ function formatTime(isoTimestamp) {
   });
 }
 
-const inputClass =
-  'w-[120px] rounded-xl border border-[#881c1c]/20 bg-white px-2.5 py-2 text-sm text-[#100e06] outline-none focus:border-[#881c1c]/50 focus:ring-2 focus:ring-[#881c1c]/15';
-
 const btnPrimaryClass =
   'rounded-xl bg-gradient-to-r from-[#7a0019] to-[#881c1c] px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-[#7a0019]/20 transition hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60';
 
 export default function ChatPage() {
   const [searchParams] = useSearchParams();
   const [uiState, setUiState] = useState('loading');
-  const [currentUserId, setCurrentUserId] = useState(1);
-  const [targetUserId, setTargetUserId] = useState(2);
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [matchOptions, setMatchOptions] = useState([]);
+  const [targetUserId, setTargetUserId] = useState(null);
   const [chatId, setChatId] = useState(null);
   const [draft, setDraft] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [messages, setMessages] = useState([]);
+  const [loadingMatches, setLoadingMatches] = useState(true);
 
   const visibleMessages = useMemo(() => messages, [messages]);
   const isInputDisabled =
-    uiState === 'loading' || uiState === 'error' || !chatId;
+    uiState === 'loading' || uiState === 'error' || !chatId || !targetUserId;
 
-  async function bootstrapChat(overrideIds = {}) {
-    const activeCurrentUserId =
-      overrideIds.currentUserId != null
-        ? overrideIds.currentUserId
-        : currentUserId;
-    const activeTargetUserId =
-      overrideIds.targetUserId != null ? overrideIds.targetUserId : targetUserId;
+  async function loadMessages(activeChatId, activeCurrentUserId) {
+    const messagesPayload = await apiFetch(
+      `/chats/${activeChatId}/messages?user_id=${activeCurrentUserId}`,
+    );
+    return (messagesPayload.messages || []).map((message) => ({
+      id: message.id,
+      sender: message.sender_user_id === activeCurrentUserId ? 'me' : 'other',
+      text: message.body,
+      timestamp: message.created_at,
+    }));
+  }
 
+  async function bootstrapChat(activeCurrentUserId, activeTargetUserId) {
+    if (!activeCurrentUserId || !activeTargetUserId) return;
     setUiState('loading');
     setErrorMessage('');
 
     try {
-      const chatResponse = await fetch(`${API_BASE_URL}/chats`, {
+      const chatPayload = await apiFetch('/chats', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: {
           initiator_user_id: activeCurrentUserId,
           recipient_user_id: activeTargetUserId,
-        }),
+        },
       });
-      const chatPayload = await chatResponse.json();
-      if (!chatResponse.ok) {
-        throw new Error(chatPayload.error || 'Failed to initialize chat');
-      }
-
       const activeChatId = chatPayload.chat.id;
       setChatId(activeChatId);
 
-      const messagesResponse = await fetch(
-        `${API_BASE_URL}/chats/${activeChatId}/messages?user_id=${activeCurrentUserId}`,
-      );
-      const messagesPayload = await messagesResponse.json();
-      if (!messagesResponse.ok) {
-        throw new Error(messagesPayload.error || 'Failed to load messages');
-      }
-
-      const loadedMessages = (messagesPayload.messages || []).map(
-        (message) => ({
-          id: message.id,
-          sender:
-            message.sender_user_id === activeCurrentUserId ? 'me' : 'other',
-          text: message.body,
-          timestamp: message.created_at,
-        }),
-      );
+      const loadedMessages = await loadMessages(activeChatId, activeCurrentUserId);
 
       setMessages(loadedMessages);
       setUiState(loadedMessages.length === 0 ? 'empty' : 'ready');
@@ -86,26 +67,96 @@ export default function ChatPage() {
   }
 
   useEffect(() => {
-    const initiatorFromQuery = Number(searchParams.get('initiator'));
+    let cancelled = false;
     const recipientFromQuery = Number(searchParams.get('recipient'));
-    const hasValidInitiator =
-      Number.isInteger(initiatorFromQuery) && initiatorFromQuery > 0;
     const hasValidRecipient =
       Number.isInteger(recipientFromQuery) && recipientFromQuery > 0;
+    async function loadIdentityAndMatches() {
+      setLoadingMatches(true);
+      try {
+        const profilePayload = await apiFetch('/profile/me');
+        const meId = profilePayload?.user?.id;
+        if (!Number.isInteger(meId) || meId <= 0) {
+          throw new Error('Unable to resolve your account for chat.');
+        }
 
-    if (hasValidInitiator) {
-      setCurrentUserId(initiatorFromQuery);
-    }
-    if (hasValidRecipient) {
-      setTargetUserId(recipientFromQuery);
+        const matchesPayload = await apiFetch('/matches?page=1&limit=50');
+        const options = Array.isArray(matchesPayload?.items)
+          ? matchesPayload.items.map((item) => ({
+              userId: item.user_id,
+              displayName: item.display_name || item.email || `User ${item.user_id}`,
+              email: item.email || '',
+            }))
+          : [];
+
+        if (cancelled) return;
+
+        setCurrentUserId(meId);
+        setMatchOptions(options);
+
+        const defaultTarget =
+          hasValidRecipient &&
+          options.some((option) => option.userId === recipientFromQuery)
+            ? recipientFromQuery
+            : options[0]?.userId ?? null;
+
+        setTargetUserId(defaultTarget);
+        if (!defaultTarget) {
+          setChatId(null);
+          setMessages([]);
+          setUiState('empty');
+        }
+      } catch (error) {
+        if (cancelled) return;
+        setUiState('error');
+        setErrorMessage(error.message || 'Failed to load chat users.');
+      } finally {
+        if (!cancelled) {
+          setLoadingMatches(false);
+        }
+      }
     }
 
-    bootstrapChat({
-      currentUserId: hasValidInitiator ? initiatorFromQuery : currentUserId,
-      targetUserId: hasValidRecipient ? recipientFromQuery : targetUserId,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    loadIdentityAndMatches();
+
+    return () => {
+      cancelled = true;
+    };
   }, [searchParams]);
+
+  useEffect(() => {
+    if (!currentUserId || !targetUserId || loadingMatches) return;
+    bootstrapChat(currentUserId, targetUserId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUserId, targetUserId, loadingMatches]);
+
+  useEffect(() => {
+    if (!chatId || !currentUserId || uiState === 'error') {
+      return undefined;
+    }
+
+    const intervalId = window.setInterval(async () => {
+      try {
+        const latestMessages = await loadMessages(chatId, currentUserId);
+        setMessages((existing) => {
+          if (
+            existing.length === latestMessages.length &&
+            existing[existing.length - 1]?.id === latestMessages[latestMessages.length - 1]?.id
+          ) {
+            return existing;
+          }
+          return latestMessages;
+        });
+        if (latestMessages.length > 0) {
+          setUiState('ready');
+        }
+      } catch {
+        // Ignore transient polling errors and keep current chat state.
+      }
+    }, 3000);
+
+    return () => window.clearInterval(intervalId);
+  }, [chatId, currentUserId, uiState]);
 
   async function handleSend(event) {
     event.preventDefault();
@@ -115,21 +166,13 @@ export default function ChatPage() {
     }
 
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/chats/${chatId}/messages`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sender_user_id: currentUserId,
-            body: cleaned,
-          }),
+      const payload = await apiFetch(`/chats/${chatId}/messages`, {
+        method: 'POST',
+        body: {
+          sender_user_id: currentUserId,
+          body: cleaned,
         },
-      );
-      const payload = await response.json();
-      if (!response.ok) {
-        throw new Error(payload.error || 'Failed to send message');
-      }
+      });
 
       const nextMessage = {
         id: payload.message.id,
@@ -146,6 +189,11 @@ export default function ChatPage() {
       setErrorMessage(error.message || 'Unexpected error');
     }
   }
+
+  const activeTarget = useMemo(
+    () => matchOptions.find((option) => option.userId === targetUserId),
+    [matchOptions, targetUserId],
+  );
 
   function renderConversationState() {
     if (uiState === 'loading') {
@@ -171,7 +219,11 @@ export default function ChatPage() {
           <button
             type="button"
             className={btnPrimaryClass}
-            onClick={bootstrapChat}
+            onClick={() => {
+              if (currentUserId && targetUserId) {
+                bootstrapChat(currentUserId, targetUserId);
+              }
+            }}
           >
             Try again
           </button>
@@ -182,8 +234,14 @@ export default function ChatPage() {
     if (visibleMessages.length === 0) {
       return (
         <div className="grid min-h-[220px] flex-1 place-content-center justify-items-center gap-2 py-8 text-center text-[#100e06]/70">
-          <p className="font-medium text-[#100e06]">No messages yet.</p>
-          <span className="text-sm">Say hello to start the conversation.</span>
+          <p className="font-medium text-[#100e06]">
+            {targetUserId ? 'No messages yet.' : 'No conversation available yet.'}
+          </p>
+          <span className="text-sm">
+            {targetUserId
+              ? 'Say hello to start the conversation.'
+              : 'Get matched with another user to start chatting.'}
+          </span>
         </div>
       );
     }
@@ -233,50 +291,38 @@ export default function ChatPage() {
               RoomMatch Chat
             </h1>
             <p className="mt-1 text-sm text-[#100e06]/60">
-              {chatId ? `Connected to chat #${chatId}` : 'Connecting…'}
+              {chatId
+                ? activeTarget
+                  ? `Chatting with ${activeTarget.displayName}`
+                  : `Connected to chat #${chatId}`
+                : 'Connecting…'}
             </p>
           </div>
-          <div className="flex flex-wrap items-end gap-2.5">
-            <label
-              htmlFor="current-user-id"
-              className="grid gap-1.5 text-[0.75rem] font-medium text-[#100e06]/70"
+          <label
+            htmlFor="chat-recipient"
+            className="grid min-w-[230px] gap-1.5 text-[0.75rem] font-medium text-[#100e06]/70"
+          >
+            Conversation
+            <select
+              id="chat-recipient"
+              className="h-10 rounded-xl border border-[#881c1c]/20 bg-white px-3 text-sm text-[#100e06] outline-none focus:border-[#881c1c]/45 focus:ring-2 focus:ring-[#881c1c]/10"
+              value={targetUserId ?? ''}
+              disabled={loadingMatches || matchOptions.length === 0}
+              onChange={(event) => setTargetUserId(Number(event.target.value))}
             >
-              My user ID
-              <input
-                id="current-user-id"
-                type="number"
-                min="1"
-                className={inputClass}
-                value={currentUserId}
-                onChange={(event) =>
-                  setCurrentUserId(Number(event.target.value) || 1)
-                }
-              />
-            </label>
-            <label
-              htmlFor="target-user-id"
-              className="grid gap-1.5 text-[0.75rem] font-medium text-[#100e06]/70"
-            >
-              Peer user ID
-              <input
-                id="target-user-id"
-                type="number"
-                min="1"
-                className={inputClass}
-                value={targetUserId}
-                onChange={(event) =>
-                  setTargetUserId(Number(event.target.value) || 1)
-                }
-              />
-            </label>
-            <button
-              type="button"
-              className={`${btnPrimaryClass} self-end`}
-              onClick={bootstrapChat}
-            >
-              Connect
-            </button>
-          </div>
+              {matchOptions.length === 0 ? (
+                <option value="">
+                  {loadingMatches ? 'Loading matches...' : 'No chat options'}
+                </option>
+              ) : null}
+              {matchOptions.map((option) => (
+                <option key={option.userId} value={option.userId}>
+                  {option.displayName}
+                  {option.email ? ` (${option.email})` : ''}
+                </option>
+              ))}
+            </select>
+          </label>
         </header>
 
         <section className="min-h-0 flex-1 overflow-y-auto">
