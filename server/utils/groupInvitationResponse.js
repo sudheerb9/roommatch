@@ -31,6 +31,20 @@ function asInvitationResponse(invitation) {
     };
   }
 
+  const groupLite = row.group ?? row.Group;
+  if (
+    groupLite &&
+    typeof groupLite === "object" &&
+    groupLite.id !== undefined &&
+    groupLite.name !== undefined
+  ) {
+    out.group = {
+      id: Number(groupLite.id),
+      name: groupLite.name,
+      status: groupLite.status ?? null,
+    };
+  }
+
   return out;
 }
 
