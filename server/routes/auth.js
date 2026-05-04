@@ -197,7 +197,7 @@ router.post("/callback", async (req, res, next) => {
 });
 
 // GET /auth/me
-router.get("/me", authenticate, async (req, res, next) => {
+router.get("/me", authenticate, (req, res, next) => {
   try {
     const { user } = req;
     return res.json({
@@ -214,7 +214,7 @@ router.get("/me", authenticate, async (req, res, next) => {
 });
 
 // POST /auth/logout
-router.post("/logout", authenticate, async (req, res, next) => {
+router.post("/logout", authenticate, (req, res, next) => {
   try {
     // JWT tokens are stateless, so logout is just a client-side operation.
     // The token will remain valid until expiry, but the client removes it from storage.
