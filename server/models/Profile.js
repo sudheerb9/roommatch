@@ -29,41 +29,51 @@ module.exports = (sequelize) => {
           "non_binary",
           "prefer_not_to_say",
         ),
-        allowNull: true,
+        allowNull: false,
       },
       sleep_schedule: {
         type: DataTypes.ENUM("early_bird", "night_owl"),
-        allowNull: true,
+        allowNull: false,
       },
       cleanliness_level: {
         type: DataTypes.ENUM("clean", "average", "relaxed"),
-        allowNull: true,
+        allowNull: false,
       },
       noise_tolerance: {
         type: DataTypes.ENUM("sensitive", "moderate", "tolerant"),
-        allowNull: true,
+        allowNull: false,
       },
       smoking_preference: {
         type: DataTypes.ENUM("yes", "no"),
-        allowNull: true,
+        allowNull: false,
       },
       drinking_preference: {
         type: DataTypes.ENUM("yes", "no"),
-        allowNull: true,
+        allowNull: false,
       },
       social_behavior: {
         type: DataTypes.ENUM("social", "moderate", "introverted"),
-        allowNull: true,
+        allowNull: false,
       },
       study_preferences: {
         type: DataTypes.ENUM("studious", "moderate", "casual"),
-        allowNull: true,
+        allowNull: false,
       },
     },
     {
       tableName: "profiles",
     },
   );
+
+  const { scheduleMatchScoreRebuild } = require("../jobs/scheduleMatchScoreRebuild");
+
+  Profile.addHook("afterSave", (instance) => {
+    scheduleMatchScoreRebuild(instance.user_id);
+  });
+
+  Profile.addHook("afterDestroy", (instance) => {
+    scheduleMatchScoreRebuild(instance.user_id);
+  });
 
   return Profile;
 };

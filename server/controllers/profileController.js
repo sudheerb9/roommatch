@@ -1,4 +1,5 @@
 const { Profile, MatchPreference } = require("../models");
+const { userAccountIsActive } = require("../utils/userAccount");
 
 const PROFILE_ENUMS = {
   gender: new Set([
@@ -48,20 +49,20 @@ const PREFERENCE_ENUMS = {
   ]),
 };
 
-const PROFILE_FIELDS = ["bio", ...Object.keys(PROFILE_ENUMS)];
+const REQUIRED_PROFILE_KEYS = Object.keys(PROFILE_ENUMS);
 const PREFERENCE_FIELDS = Object.keys(PREFERENCE_ENUMS);
-const ALL_FIELDS = new Set([...PROFILE_FIELDS, ...PREFERENCE_FIELDS]);
+const ALL_FIELDS = new Set(["bio", ...REQUIRED_PROFILE_KEYS, ...PREFERENCE_FIELDS]);
 
 function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function validateEnumOrNull(name, value, allowedSet) {
-  if (value === null) {
-    return { ok: true, normalized: null };
+function validateRequiredEnum(name, value, allowedSet) {
+  if (value === null || value === undefined) {
+    return { ok: false, error: `${name} is required` };
   }
   if (typeof value !== "string") {
-    return { ok: false, error: `${name} must be a string or null` };
+    return { ok: false, error: `${name} must be a string` };
   }
   const trimmed = value.trim();
   if (!allowedSet.has(trimmed)) {
@@ -93,42 +94,75 @@ function validateAndNormalizePatch(body) {
   }
 
   const keys = Object.keys(body);
+  if (keys.length === 0) {
+    return { ok: false, error: "Empty body" };
+  }
+
   for (const key of keys) {
     if (!ALL_FIELDS.has(key)) {
       return { ok: false, error: `Unknown field: ${key}` };
     }
   }
 
+  const touchesPreference = PREFERENCE_FIELDS.some((k) =>
+    Object.prototype.hasOwnProperty.call(body, k),
+  );
+  const touchesProfileCore = REQUIRED_PROFILE_KEYS.some((k) =>
+    Object.prototype.hasOwnProperty.call(body, k),
+  );
+  const touchesBio = Object.prototype.hasOwnProperty.call(body, "bio");
+
+  if (!touchesPreference && !touchesProfileCore && !touchesBio) {
+    return { ok: false, error: "No valid fields in body" };
+  }
+
   const profilePatch = {};
   const preferencePatch = {};
 
-  if (Object.prototype.hasOwnProperty.call(body, "bio")) {
-    const out = validateBio(body.bio);
-    if (!out.ok) return out;
-    profilePatch.bio = out.normalized;
+  if (touchesPreference) {
+    for (const field of PREFERENCE_FIELDS) {
+      if (!Object.prototype.hasOwnProperty.call(body, field)) {
+        return {
+          ok: false,
+          error: `Missing required preference field: ${field}`,
+        };
+      }
+      const out = validateRequiredEnum(field, body[field], PREFERENCE_ENUMS[field]);
+      if (!out.ok) {
+        return out;
+      }
+      preferencePatch[field] = out.normalized;
+    }
   }
 
-  for (const [field, allowedSet] of Object.entries(PROFILE_ENUMS)) {
-    if (Object.prototype.hasOwnProperty.call(body, field)) {
-      const out = validateEnumOrNull(field, body[field], allowedSet);
-      if (!out.ok) return out;
+  if (touchesProfileCore) {
+    for (const field of REQUIRED_PROFILE_KEYS) {
+      if (!Object.prototype.hasOwnProperty.call(body, field)) {
+        return { ok: false, error: `Missing required profile field: ${field}` };
+      }
+      const out = validateRequiredEnum(field, body[field], PROFILE_ENUMS[field]);
+      if (!out.ok) {
+        return out;
+      }
       profilePatch[field] = out.normalized;
     }
   }
 
-  for (const [field, allowedSet] of Object.entries(PREFERENCE_ENUMS)) {
-    if (Object.prototype.hasOwnProperty.call(body, field)) {
-      const out = validateEnumOrNull(field, body[field], allowedSet);
-      if (!out.ok) return out;
-      preferencePatch[field] = out.normalized;
+  if (touchesBio) {
+    const out = validateBio(body.bio);
+    if (!out.ok) {
+      return out;
     }
+    profilePatch.bio = out.normalized;
   }
 
   return { ok: true, profilePatch, preferencePatch };
 }
 
 function asProfileResponse(user, profile, preference) {
+  const matchingEligible = Boolean(profile) && userAccountIsActive(user);
   return {
+    matching_eligible: matchingEligible,
     user: {
       id: user.id,
       email: user.email,
@@ -168,7 +202,7 @@ async function getMyProfile(req, res, next) {
     const user = req.user;
 
     const [profile, preference] = await Promise.all([
-      Profile.findByPk(user.id),
+      Profile.findOne({ where: { user_id: user.id } }),
       MatchPreference.findByPk(user.id),
     ]);
 
@@ -188,22 +222,54 @@ async function updateMyProfile(req, res, next) {
 
     const { profilePatch, preferencePatch } = validation;
 
-    let profile = await Profile.findByPk(user.id);
-    if (!profile) {
-      profile = await Profile.create({ user_id: user.id });
-    }
-
+    let profile = await Profile.findOne({ where: { user_id: user.id } });
     let preference = await MatchPreference.findByPk(user.id);
-    if (!preference) {
-      preference = await MatchPreference.create({ user_id: user.id });
+
+    const profileEnumKeys = REQUIRED_PROFILE_KEYS.filter((k) =>
+      Object.prototype.hasOwnProperty.call(profilePatch, k),
+    );
+    const hasBio = Object.prototype.hasOwnProperty.call(profilePatch, "bio");
+    const isBioOnly = hasBio && profileEnumKeys.length === 0;
+
+    if (Object.keys(preferencePatch).length > 0) {
+      if (!preference) {
+        preference = await MatchPreference.create({
+          user_id: user.id,
+          ...preferencePatch,
+        });
+      } else {
+        await preference.update(preferencePatch);
+      }
     }
 
-    if (Object.keys(profilePatch).length > 0) {
-      await profile.update(profilePatch);
+    if (profileEnumKeys.length > 0) {
+      const slice = {};
+      for (const k of profileEnumKeys) {
+        slice[k] = profilePatch[k];
+      }
+      if (hasBio) {
+        slice.bio = profilePatch.bio;
+      }
+      if (!profile) {
+        profile = await Profile.create({ user_id: user.id, ...slice });
+      } else {
+        await profile.update(slice);
+      }
+      if (!(await MatchPreference.findByPk(user.id))) {
+        await MatchPreference.create({ user_id: user.id });
+      }
+    } else if (isBioOnly) {
+      if (!profile) {
+        return res.status(400).json({
+          error:
+            "Complete your profile (lifestyle fields) before updating bio only.",
+        });
+      }
+      await profile.update({ bio: profilePatch.bio });
     }
-    if (Object.keys(preferencePatch).length > 0) {
-      await preference.update(preferencePatch);
-    }
+
+    profile = await Profile.findOne({ where: { user_id: user.id } });
+    preference = await MatchPreference.findByPk(user.id);
 
     return res.status(200).json(asProfileResponse(user, profile, preference));
   } catch (err) {
@@ -215,4 +281,3 @@ module.exports = {
   getMyProfile,
   updateMyProfile,
 };
-

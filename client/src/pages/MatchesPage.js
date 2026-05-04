@@ -93,11 +93,26 @@ export default function MatchesPage() {
     }
 
     if (items.length === 0) {
+      const notEligible = meta?.matching_eligible === false;
       return (
         <div className="rounded-3xl border border-[#881c1c]/10 bg-white/70 p-10 text-center">
-          <p className="text-lg font-semibold text-[#100e06]">No matches yet</p>
+          <p className="text-lg font-semibold text-[#100e06]">
+            {notEligible ? 'Matching not active yet' : 'No matches yet'}
+          </p>
           <p className="mt-2 text-sm text-[#100e06]/65">
-            Update your profile and preferences, then refresh this page.
+            {notEligible ? (
+              <>
+                Complete and save your profile on{' '}
+                <Link to="/profile" className="font-semibold text-[#881c1c] underline">
+                  Profile
+                </Link>{' '}
+                to appear in matching and refresh this page.
+              </>
+            ) : (
+              <>
+                Update your profile and preferences, then refresh this page.
+              </>
+            )}
           </p>
         </div>
       );

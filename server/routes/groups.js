@@ -21,7 +21,6 @@ function parseInviteeUserId(raw) {
   return n;
 }
 
-
 router.get("/:groupId/matches", authenticate, getGroupMatches);
 router.post("/:groupId/assign", authenticate, assignGroupHousing);
 router.get("/:groupId/assignment", authenticate, getGroupAssignment);
