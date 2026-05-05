@@ -14,6 +14,12 @@ const {
 const { config } = require("../config");
 const { computeMatchScore } = require("../services/matchingService");
 const { getPagination, buildPaginationMeta } = require("../utils/pagination");
+const {
+  getAssignedGroupHousing,
+  lockAvailableHousingUnit,
+  createGroupAssignment,
+  markHousingUnitUnavailable,
+} = require("../utils/assignmentSafety");
 
 const PREFERENCE_FIELDS = [
   "preferred_sleep_schedule",
@@ -105,13 +111,6 @@ function scoreHousingUnit(unit, groupSize, housingPreference) {
   return Math.round(weighted);
 }
 
-async function ensureGroupMembership(groupId, userId) {
-  const membership = await GroupMember.findOne({
-    where: { group_id: groupId, user_id: userId },
-  });
-  return Boolean(membership);
-}
-
 function aggregatePreferences(groupPreferences) {
   const aggregate = {};
 
@@ -141,6 +140,70 @@ function aggregatePreferences(groupPreferences) {
   return aggregate;
 }
 
+async function listUserGroups(req, res, next) {
+  try {
+    const groups = await Group.findAll({
+      where: {
+        [Op.or]: [
+          { owner_user_id: req.user.id },
+          { "$members.user_id$": req.user.id },
+        ],
+      },
+      include: [
+        {
+          model: GroupMember,
+          as: "members",
+          attributes: ["user_id"],
+        },
+      ],
+      distinct: true,
+      order: [["created_at", "DESC"]],
+    });
+
+    return res.status(200).json({
+      groups: groups.map((group) => ({
+        id: group.id,
+        name: group.name,
+        status: group.status,
+        owner_user_id: group.owner_user_id,
+        member_count: group.members ? group.members.length : 0,
+      })),
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function getGroupDetails(req, res, next) {
+  try {
+    const group = await Group.findByPk(req.group.id, {
+      include: [
+        {
+          model: GroupMember,
+          as: "members",
+          attributes: ["user_id"],
+        },
+      ],
+    });
+
+    if (!group) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    return res.status(200).json({
+      group: {
+        id: group.id,
+        name: group.name,
+        status: group.status,
+        owner_user_id: group.owner_user_id,
+        member_ids: group.members.map((member) => member.user_id),
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 async function getGroupMatches(req, res, next) {
   try {
     const groupId = parsePositiveInt(req.params.groupId);
@@ -150,17 +213,7 @@ async function getGroupMatches(req, res, next) {
         .json({ error: "groupId must be a positive integer" });
     }
 
-    const group = await Group.findByPk(groupId);
-    if (!group) {
-      return res.status(404).json({ error: "Group not found" });
-    }
-
-    const isMember = await ensureGroupMembership(groupId, req.user.id);
-    if (!isMember) {
-      return res
-        .status(403)
-        .json({ error: "Only group members can view matches" });
-    }
+    const group = req.group;
 
     const groupMembers = await GroupMember.findAll({
       where: { group_id: groupId },
@@ -260,23 +313,9 @@ async function assignGroupHousing(req, res, next) {
         .json({ error: "groupId must be a positive integer" });
     }
 
-    const group = await Group.findByPk(groupId);
-    if (!group) {
-      return res.status(404).json({ error: "Group not found" });
-    }
+    const group = req.group;
 
-    const isMember = await ensureGroupMembership(groupId, req.user.id);
-    if (!isMember) {
-      return res
-        .status(403)
-        .json({ error: "Only group members can assign housing" });
-    }
-
-    const existingAssignment = await GroupAssignment.findOne({
-      where: { group_id: groupId, status: "assigned" },
-      include: [{ model: HousingUnit, as: "housingUnit" }],
-      order: [["assigned_at", "DESC"]],
-    });
+    const existingAssignment = await getAssignedGroupHousing(groupId);
     if (existingAssignment) {
       return res.status(200).json({ assignment: existingAssignment });
     }
@@ -308,25 +347,18 @@ async function assignGroupHousing(req, res, next) {
     }
 
     const assignment = await sequelize.transaction(async (transaction) => {
-      const unit = await HousingUnit.findByPk(winner.unit.id, {
-        transaction,
-        lock: transaction.LOCK.UPDATE,
-      });
-      if (!unit || !unit.is_available) {
+      const unit = await lockAvailableHousingUnit(winner.unit.id, transaction);
+      if (!unit) {
         throw new Error("Selected housing unit is no longer available");
       }
 
-      const createdAssignment = await GroupAssignment.create(
-        {
-          group_id: groupId,
-          housing_unit_id: unit.id,
-          status: "assigned",
-          note: `Auto-selected with score ${winner.score}`,
-        },
-        { transaction },
+      const createdAssignment = await createGroupAssignment(
+        groupId,
+        unit.id,
+        transaction,
       );
 
-      await unit.update({ is_available: false }, { transaction });
+      await markHousingUnitUnavailable(unit, transaction);
       await group.update({ status: "assigned" }, { transaction });
 
       return createdAssignment;
@@ -351,17 +383,7 @@ async function getGroupAssignment(req, res, next) {
         .json({ error: "groupId must be a positive integer" });
     }
 
-    const group = await Group.findByPk(groupId);
-    if (!group) {
-      return res.status(404).json({ error: "Group not found" });
-    }
-
-    const isMember = await ensureGroupMembership(groupId, req.user.id);
-    if (!isMember) {
-      return res
-        .status(403)
-        .json({ error: "Only group members can view assignment details" });
-    }
+    const group = req.group;
 
     const assignment = await GroupAssignment.findOne({
       where: { group_id: groupId, status: "assigned" },
@@ -385,4 +407,6 @@ module.exports = {
   getGroupMatches,
   assignGroupHousing,
   getGroupAssignment,
+  listUserGroups,
+  getGroupDetails,
 };

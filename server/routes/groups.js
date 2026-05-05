@@ -4,10 +4,12 @@ const {
   getGroupMatches,
   assignGroupHousing,
   getGroupAssignment,
+  listUserGroups,
+  getGroupDetails,
 } = require("../controllers/groupsController");
 const { authenticate } = require("../middleware/authenticate");
+const { authorizeGroupAccess } = require("../middleware/groupAuthorization");
 const { GroupMember, GroupInvitation, User } = require("../models");
-const { assertCanAccessGroup } = require("../utils/groupAccess");
 const { asInvitationResponse } = require("../utils/groupInvitationResponse");
 
 const router = express.Router();
@@ -21,22 +23,34 @@ function parseInviteeUserId(raw) {
   return n;
 }
 
-router.get("/:groupId/matches", authenticate, getGroupMatches);
-router.post("/:groupId/assign", authenticate, assignGroupHousing);
-router.get("/:groupId/assignment", authenticate, getGroupAssignment);
+router.get("/", authenticate, listUserGroups);
+router.get(
+  "/:groupId/matches",
+  authenticate,
+  authorizeGroupAccess,
+  getGroupMatches,
+);
+router.post(
+  "/:groupId/assign",
+  authenticate,
+  authorizeGroupAccess,
+  assignGroupHousing,
+);
+router.get(
+  "/:groupId/assignment",
+  authenticate,
+  authorizeGroupAccess,
+  getGroupAssignment,
+);
 
 /** GET /groups/:groupId/invitations */
 router.get(
   "/:groupId/invitations",
   authenticate,
+  authorizeGroupAccess,
   async function listGroupInvitations(req, res, next) {
     try {
-      const access = await assertCanAccessGroup(req.params.groupId, req.user);
-      if (!access.ok) {
-        return res.status(access.status).json(access.body);
-      }
-
-      const { group } = access;
+      const { group } = req;
 
       const invitations = await GroupInvitation.findAll({
         where: { group_id: group.id },
@@ -68,14 +82,10 @@ router.get(
 router.post(
   "/:groupId/invitations",
   authenticate,
+  authorizeGroupAccess,
   async function createGroupInvitation(req, res, next) {
     try {
-      const access = await assertCanAccessGroup(req.params.groupId, req.user);
-      if (!access.ok) {
-        return res.status(access.status).json(access.body);
-      }
-
-      const { group } = access;
+      const { group } = req;
       const inviteeUserId = parseInviteeUserId(req.body.invitee_user_id);
       if (inviteeUserId == null) {
         return res
@@ -157,5 +167,7 @@ router.post(
     }
   },
 );
+
+router.get("/:groupId", authenticate, authorizeGroupAccess, getGroupDetails);
 
 module.exports = router;
