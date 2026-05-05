@@ -1,6 +1,7 @@
 import { ArrowLeft } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
+import ApiErrorState from '../components/ui/ApiErrorState';
 import { apiFetch } from '../utils/api';
 
 const NOTE_MAX = 500;
@@ -64,6 +65,7 @@ export default function GroupInvitationComposePage() {
   const [note, setNote] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
   const [bannerError, setBannerError] = useState('');
+  const [pageError, setPageError] = useState(null);
   /** @type {null | Record<string, any>} */
   const [sentInvitation, setSentInvitation] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -128,6 +130,7 @@ export default function GroupInvitationComposePage() {
 
     setFieldErrors({});
     setBannerError('');
+    setPageError(null);
     setSentInvitation(null);
     setSubmitting(true);
 
@@ -143,7 +146,11 @@ export default function GroupInvitationComposePage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : 'Failed to send invitation.';
-      setBannerError(message);
+      if (err?.status === 403 || err?.status === 404) {
+        setPageError({ status: err.status, message });
+      } else {
+        setBannerError(message);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -164,13 +171,29 @@ export default function GroupInvitationComposePage() {
           Invalid group ID in URL.{' '}
           <Link
             to="/group-invitations"
-            className="ml-1 font-semibold text-[#881c1c] underline"
+            className="ml-1 font-semibold text-[#7a0019] underline"
           >
             Start over
           </Link>
           .
         </div>
       </div>
+    );
+  }
+
+  if (pageError) {
+    return (
+      <ApiErrorState
+        status={pageError.status}
+        message={pageError.message}
+        retryLabel="Try again"
+        onRetry={() => setPageError(null)}
+      >
+        <p className="text-sm text-[#100e06]/70">
+          This group may not exist or you may not be authorized to invite
+          members.
+        </p>
+      </ApiErrorState>
     );
   }
 
@@ -191,8 +214,8 @@ export default function GroupInvitationComposePage() {
             <span className="text-[#881c1c]">group {groupId}</span>
           </h1>
           <p className="mx-auto max-w-xl text-[#100e06]/65">
-            Pick someone by their user ID (for example from Matches) and send
-            an optional note along with the invite.
+            Pick someone by their user ID (for example from Matches) and send an
+            optional note along with the invite.
           </p>
         </header>
 

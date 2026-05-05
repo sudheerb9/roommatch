@@ -2,13 +2,15 @@ import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import './App.css';
 import AppLayout from './app/AppLayout';
 import ChatPage from './pages/ChatPage';
-import HomePage from './pages/HomePage';
+import GroupHousingEntryPage from './pages/GroupHousingEntryPage';
+import GroupHousingPreferencesPage from './pages/GroupHousingPreferencesPage';
 import GroupInvitationComposePage from './pages/GroupInvitationComposePage';
 import GroupInvitationEntryPage from './pages/GroupInvitationEntryPage';
 import GroupInvitationsInboxPage from './pages/GroupInvitationsInboxPage';
-import GroupHousingEntryPage from './pages/GroupHousingEntryPage';
-import GroupHousingPreferencesPage from './pages/GroupHousingPreferencesPage';
+import GroupsPage from './pages/GroupsPage';
+import HomePage from './pages/HomePage';
 import HomeRedirect from './pages/HomeRedirect';
+import HousingUnitsPage from './pages/HousingUnitsPage';
 import LoginPage from './pages/LoginPage';
 import MatchesPage from './pages/MatchesPage';
 import './pages/Pages.css';
@@ -69,8 +71,13 @@ function App() {
         <Route path="/" element={<HomeRedirect />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/preferences" element={<PreferencesPage />} />
+        <Route path="/groups" element={<GroupsPage />} />
+        <Route path="/housing-units" element={<HousingUnitsPage />} />
         <Route path="/group-housing" element={<GroupHousingEntryPage />} />
-        <Route path="/group-invitations" element={<GroupInvitationEntryPage />} />
+        <Route
+          path="/group-invitations"
+          element={<GroupInvitationEntryPage />}
+        />
         <Route path="/invitations" element={<GroupInvitationsInboxPage />} />
         <Route
           path="/groups/:groupId/invite"

@@ -1,6 +1,7 @@
 import { ArrowLeft } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import ApiErrorState from '../components/ui/ApiErrorState';
 import { apiFetch } from '../utils/api';
 
 const EMPTY_FORM = {
@@ -147,6 +148,7 @@ export default function GroupHousingPreferencesPage() {
   const [fieldErrors, setFieldErrors] = useState({});
   const [savedMsg, setSavedMsg] = useState(null);
   const [hasStoredRow, setHasStoredRow] = useState(null);
+  const [pageError, setPageError] = useState(null);
 
   const numericGroupIdOk = typeof groupId === 'string' && /^\d+$/.test(groupId);
 
@@ -158,6 +160,7 @@ export default function GroupHousingPreferencesPage() {
         return;
       }
       setBannerError('');
+      setPageError(null);
       if (!preserveSaved) {
         setSavedMsg(null);
       }
@@ -172,11 +175,15 @@ export default function GroupHousingPreferencesPage() {
         setHasStoredRow(Boolean(row));
         setForm(normalizeFromApi(row));
       } catch (err) {
-        setBannerError(
+        const message =
           err instanceof Error
             ? err.message
-            : 'Failed to load housing preferences.'
-        );
+            : 'Failed to load housing preferences.';
+        if (err?.status === 403 || err?.status === 404) {
+          setPageError({ status: err.status, message });
+        } else {
+          setBannerError(message);
+        }
       } finally {
         setLoading(false);
       }
@@ -215,7 +222,11 @@ export default function GroupHousingPreferencesPage() {
         err instanceof Error
           ? err.message
           : 'Failed to save housing preferences.';
-      setBannerError(message);
+      if (err?.status === 403 || err?.status === 404) {
+        setPageError({ status: err.status, message });
+      } else {
+        setBannerError(message);
+      }
     } finally {
       setSaving(false);
     }
@@ -246,6 +257,17 @@ export default function GroupHousingPreferencesPage() {
           .
         </div>
       </div>
+    );
+  }
+
+  if (pageError) {
+    return (
+      <ApiErrorState
+        status={pageError.status}
+        message={pageError.message}
+        retryLabel="Try again"
+        onRetry={() => load()}
+      />
     );
   }
 
