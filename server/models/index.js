@@ -143,6 +143,7 @@ async function initDatabase() {
   logger.info("MySQL connection established.");
   if (config.db.sync) {
     await sequelize.sync({ alter: config.db.syncAlter });
+    // await sequelize.sync({ force: true }); // For development, force sync to reset DB on each run. In production, use alter to apply non-destructive changes.
     logger.info(
       { alter: config.db.syncAlter },
       "Database schema synchronized (sequelize.sync).",

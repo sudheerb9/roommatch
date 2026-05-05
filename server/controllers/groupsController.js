@@ -14,6 +14,11 @@ const {
 const { config } = require("../config");
 const { computeMatchScore } = require("../services/matchingService");
 const { getPagination, buildPaginationMeta } = require("../utils/pagination");
+const {
+  lockAvailableHousingUnit,
+  createGroupAssignment,
+  markHousingUnitUnavailable,
+} = require("../utils/assignmentSafety");
 const { assertCanAccessGroup } = require("../utils/groupAccess");
 
 function asGroupLite(group) {
@@ -126,8 +131,7 @@ function ensureGroupOwnerOrMember(group, userId) {
     typeof group.owner_user_id === "bigint"
       ? group.owner_user_id.toString()
       : String(group.owner_user_id);
-  const uid =
-    typeof userId === "bigint" ? userId.toString() : String(userId);
+  const uid = typeof userId === "bigint" ? userId.toString() : String(userId);
   if (ownerId === uid) {
     return Promise.resolve(true);
   }
@@ -163,6 +167,156 @@ function aggregatePreferences(groupPreferences) {
   return aggregate;
 }
 
+async function listUserGroups(req, res, next) {
+  try {
+    const groups = await Group.findAll({
+      where: {
+        [Op.or]: [
+          { owner_user_id: req.user.id },
+          { "$members.user_id$": req.user.id },
+        ],
+      },
+      include: [
+        {
+          model: GroupMember,
+          as: "members",
+          attributes: ["user_id"],
+        },
+      ],
+      distinct: true,
+      order: [["created_at", "DESC"]],
+    });
+
+    return res.status(200).json({
+      groups: groups.map((group) => ({
+        id: group.id,
+        name: group.name,
+        status: group.status,
+        owner_user_id: group.owner_user_id,
+        member_count: group.members ? group.members.length : 0,
+      })),
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function getGroupDetails(req, res, next) {
+  try {
+    const group = await Group.findByPk(req.group.id, {
+      include: [
+        {
+          model: GroupMember,
+          as: "members",
+          attributes: ["user_id"],
+        },
+      ],
+    });
+
+    if (!group) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    return res.status(200).json({
+      group: {
+        id: group.id,
+        name: group.name,
+        status: group.status,
+        owner_user_id: group.owner_user_id,
+        member_ids: group.members.map((member) => member.user_id),
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function getGroupMembers(req, res, next) {
+  try {
+    const groupId = parsePositiveInt(req.params.groupId);
+    if (!groupId) {
+      return res
+        .status(400)
+        .json({ error: "groupId must be a positive integer" });
+    }
+
+    const members = await GroupMember.findAll({
+      where: { group_id: groupId },
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["id", "display_name", "email"],
+        },
+      ],
+      order: [
+        ["joined_at", "ASC"],
+        ["id", "ASC"],
+      ],
+    });
+
+    return res.status(200).json({
+      members: members.map((member) => ({
+        id: member.user ? member.user.id : member.user_id,
+        display_name: member.user ? member.user.display_name : null,
+        email: member.user ? member.user.email : null,
+        role: member.role,
+        joined_at: member.joined_at,
+      })),
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function createGroup(req, res, next) {
+  try {
+    const rawName =
+      typeof req.body.name === "string" ? req.body.name.trim() : "";
+    if (!rawName) {
+      return res.status(400).json({ error: "Group name is required" });
+    }
+    if (rawName.length > 120) {
+      return res
+        .status(400)
+        .json({ error: "Group name must be 120 characters or fewer" });
+    }
+
+    const group = await sequelize.transaction(async (transaction) => {
+      const createdGroup = await Group.create(
+        {
+          owner_user_id: req.user.id,
+          name: rawName,
+          status: "forming",
+        },
+        { transaction },
+      );
+
+      await GroupMember.create(
+        {
+          group_id: createdGroup.id,
+          user_id: req.user.id,
+          role: "owner",
+        },
+        { transaction },
+      );
+
+      return createdGroup;
+    });
+
+    return res.status(201).json({
+      group: {
+        id: group.id,
+        name: group.name,
+        status: group.status,
+        owner_user_id: group.owner_user_id,
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 async function getGroupMatches(req, res, next) {
   try {
     const groupId = parsePositiveInt(req.params.groupId);
@@ -179,11 +333,9 @@ async function getGroupMatches(req, res, next) {
 
     const canView = await ensureGroupOwnerOrMember(group, req.user.id);
     if (!canView) {
-      return res
-        .status(403)
-        .json({
-          error: "Only group members or the owner may view matches",
-        });
+      return res.status(403).json({
+        error: "Only group members or the owner may view matches",
+      });
     }
 
     const groupLite = asGroupLite(group);
@@ -314,8 +466,7 @@ async function declareGroupReady(req, res, next) {
     const housingPref = await GroupHousingPreference.findByPk(group.id);
     if (!housingPref) {
       return res.status(409).json({
-        error:
-          "Save group housing preferences before declaring readiness.",
+        error: "Save group housing preferences before declaring readiness.",
       });
     }
 
@@ -347,11 +498,9 @@ async function assignGroupHousing(req, res, next) {
       req.user.id,
     );
     if (!canAssignPermission) {
-      return res
-        .status(403)
-        .json({
-          error: "Only group members or the owner may assign housing",
-        });
+      return res.status(403).json({
+        error: "Only group members or the owner may assign housing",
+      });
     }
 
     const existingAssignment = await GroupAssignment.findOne({
@@ -408,25 +557,18 @@ async function assignGroupHousing(req, res, next) {
     }
 
     const assignment = await sequelize.transaction(async (transaction) => {
-      const unit = await HousingUnit.findByPk(winner.unit.id, {
-        transaction,
-        lock: transaction.LOCK.UPDATE,
-      });
-      if (!unit || !unit.is_available) {
+      const unit = await lockAvailableHousingUnit(winner.unit.id, transaction);
+      if (!unit) {
         throw new Error("Selected housing unit is no longer available");
       }
 
-      const createdAssignment = await GroupAssignment.create(
-        {
-          group_id: groupId,
-          housing_unit_id: unit.id,
-          status: "assigned",
-          note: `Auto-selected with score ${winner.score}`,
-        },
-        { transaction },
+      const createdAssignment = await createGroupAssignment(
+        groupId,
+        unit.id,
+        transaction,
       );
 
-      await unit.update({ is_available: false }, { transaction });
+      await markHousingUnitUnavailable(unit, transaction);
       await group.update({ status: "assigned" }, { transaction });
 
       return createdAssignment;
@@ -456,10 +598,7 @@ async function getGroupAssignment(req, res, next) {
       return res.status(404).json({ error: "Group not found" });
     }
 
-    const canSeeAssignment = await ensureGroupOwnerOrMember(
-      group,
-      req.user.id,
-    );
+    const canSeeAssignment = await ensureGroupOwnerOrMember(group, req.user.id);
     if (!canSeeAssignment) {
       return res.status(403).json({
         error: "Only group members or the owner may view assignment details",
@@ -485,8 +624,12 @@ async function getGroupAssignment(req, res, next) {
 }
 
 module.exports = {
+  createGroup,
+  getGroupMembers,
   getGroupMatches,
   declareGroupReady,
   assignGroupHousing,
   getGroupAssignment,
+  listUserGroups,
+  getGroupDetails,
 };
