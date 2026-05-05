@@ -231,92 +231,6 @@ async function getGroupDetails(req, res, next) {
   }
 }
 
-async function getGroupMembers(req, res, next) {
-  try {
-    const groupId = parsePositiveInt(req.params.groupId);
-    if (!groupId) {
-      return res
-        .status(400)
-        .json({ error: "groupId must be a positive integer" });
-    }
-
-    const members = await GroupMember.findAll({
-      where: { group_id: groupId },
-      include: [
-        {
-          model: User,
-          as: "user",
-          attributes: ["id", "display_name", "email"],
-        },
-      ],
-      order: [
-        ["joined_at", "ASC"],
-        ["id", "ASC"],
-      ],
-    });
-
-    return res.status(200).json({
-      members: members.map((member) => ({
-        id: member.user ? member.user.id : member.user_id,
-        display_name: member.user ? member.user.display_name : null,
-        email: member.user ? member.user.email : null,
-        role: member.role,
-        joined_at: member.joined_at,
-      })),
-    });
-  } catch (error) {
-    return next(error);
-  }
-}
-
-async function createGroup(req, res, next) {
-  try {
-    const rawName =
-      typeof req.body.name === "string" ? req.body.name.trim() : "";
-    if (!rawName) {
-      return res.status(400).json({ error: "Group name is required" });
-    }
-    if (rawName.length > 120) {
-      return res
-        .status(400)
-        .json({ error: "Group name must be 120 characters or fewer" });
-    }
-
-    const group = await sequelize.transaction(async (transaction) => {
-      const createdGroup = await Group.create(
-        {
-          owner_user_id: req.user.id,
-          name: rawName,
-          status: "forming",
-        },
-        { transaction },
-      );
-
-      await GroupMember.create(
-        {
-          group_id: createdGroup.id,
-          user_id: req.user.id,
-          role: "owner",
-        },
-        { transaction },
-      );
-
-      return createdGroup;
-    });
-
-    return res.status(201).json({
-      group: {
-        id: group.id,
-        name: group.name,
-        status: group.status,
-        owner_user_id: group.owner_user_id,
-      },
-    });
-  } catch (error) {
-    return next(error);
-  }
-}
-
 async function getGroupMatches(req, res, next) {
   try {
     const groupId = parsePositiveInt(req.params.groupId);
@@ -624,8 +538,6 @@ async function getGroupAssignment(req, res, next) {
 }
 
 module.exports = {
-  createGroup,
-  getGroupMembers,
   getGroupMatches,
   declareGroupReady,
   assignGroupHousing,

@@ -2,7 +2,6 @@ import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import './App.css';
 import AppLayout from './app/AppLayout';
 import ChatPage from './pages/ChatPage';
-import GroupDetailPage from './pages/GroupDetailPage';
 import GroupHousingEntryPage from './pages/GroupHousingEntryPage';
 import GroupHousingPreferencesPage from './pages/GroupHousingPreferencesPage';
 import GroupInvitationComposePage from './pages/GroupInvitationComposePage';
@@ -74,7 +73,6 @@ function App() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/preferences" element={<PreferencesPage />} />
         <Route path="/groups" element={<GroupsPage />} />
-        <Route path="/groups/:groupId" element={<GroupDetailPage />} />
         <Route path="/housing-units" element={<HousingUnitsPage />} />
         <Route path="/group-housing" element={<GroupHousingEntryPage />} />
         <Route

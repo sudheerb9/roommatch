@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import ApiErrorState from '../components/ui/ApiErrorState';
 import { apiFetch } from '../utils/api';
 
@@ -14,11 +14,6 @@ export default function GroupsPage() {
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showCreateGroup, setShowCreateGroup] = useState(false);
-  const [newGroupName, setNewGroupName] = useState('');
-  const [createError, setCreateError] = useState(null);
-  const [creating, setCreating] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     let cancelled = false;
@@ -82,100 +77,14 @@ export default function GroupsPage() {
               invitations.
             </p>
           </div>
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => setShowCreateGroup(true)}
-              className="inline-flex items-center justify-center rounded-2xl bg-[#881c1c] px-5 py-3 text-sm font-semibold text-white shadow-md shadow-[#7a0019]/20 transition hover:bg-[#7a0019]"
-            >
-              Create group
-            </button>
-            <Link
-              to="/group-housing"
-              className="inline-flex items-center justify-center rounded-2xl border border-[#881c1c]/20 bg-white px-5 py-3 text-sm font-semibold text-[#100e06] shadow-md shadow-[#7a0019]/10 transition hover:bg-[#f9f5f2]"
-            >
-              Manage group housing
-            </Link>
-          </div>
+          <Link
+            to="/group-housing"
+            className="inline-flex items-center justify-center rounded-2xl bg-[#881c1c] px-5 py-3 text-sm font-semibold text-white shadow-md shadow-[#7a0019]/20 transition hover:bg-[#7a0019]"
+          >
+            Manage group housing
+          </Link>
         </div>
       </div>
-
-      {showCreateGroup ? (
-        <div className="rounded-[2rem] border border-[#881c1c]/10 bg-white/70 p-8 shadow-xl shadow-[#7a0019]/10 backdrop-blur-xl">
-          <div className="flex flex-col gap-4">
-            <div>
-              <h2 className="text-2xl font-bold text-[#100e06]">
-                Create a new group
-              </h2>
-              <p className="mt-2 text-sm text-[#100e06]/65">
-                Give your group a name and get started with membership and
-                housing.
-              </p>
-            </div>
-            <form
-              onSubmit={async (event) => {
-                event.preventDefault();
-                setCreateError(null);
-                const name = newGroupName.trim();
-                if (!name) {
-                  setCreateError({ message: 'Group name is required.' });
-                  return;
-                }
-
-                try {
-                  setCreating(true);
-                  const payload = await apiFetch('/groups', {
-                    method: 'POST',
-                    body: { name },
-                  });
-                  setGroups((current) => [payload.group, ...current]);
-                  setNewGroupName('');
-                  setShowCreateGroup(false);
-                  navigate(`/groups/${payload.group.id}`);
-                } catch (err) {
-                  setCreateError(err);
-                } finally {
-                  setCreating(false);
-                }
-              }}
-              className="space-y-4"
-            >
-              <label className="block text-sm font-medium text-[#100e06]">
-                Group name
-                <input
-                  type="text"
-                  value={newGroupName}
-                  onChange={(event) => setNewGroupName(event.target.value)}
-                  className="mt-2 w-full rounded-3xl border border-[#d4d4d8] bg-white px-4 py-3 text-sm text-[#100e06] shadow-sm outline-none transition focus:border-[#881c1c] focus:ring-2 focus:ring-[#881c1c]/10"
-                  placeholder="Roommatch study crew"
-                />
-              </label>
-              {createError ? (
-                <p className="text-sm text-[#b91c1c]">{createError.message}</p>
-              ) : null}
-              <div className="flex flex-wrap gap-3">
-                <button
-                  type="submit"
-                  disabled={creating}
-                  className="inline-flex items-center justify-center rounded-2xl bg-[#881c1c] px-5 py-3 text-sm font-semibold text-white shadow-md shadow-[#7a0019]/20 transition hover:bg-[#7a0019] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {creating ? 'Creating…' : 'Create group'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCreateGroup(false);
-                    setCreateError(null);
-                  }}
-                  className="inline-flex items-center justify-center rounded-2xl border border-[#881c1c]/20 bg-white px-5 py-3 text-sm font-semibold text-[#100e06] transition hover:bg-[#f9f5f2]"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      ) : null}
 
       {groups.length === 0 ? (
         <div className="rounded-[2rem] border border-[#881c1c]/10 bg-white/70 p-10 text-center shadow-xl shadow-[#7a0019]/10 backdrop-blur-xl">
@@ -183,7 +92,7 @@ export default function GroupsPage() {
             No groups yet
           </h2>
           <p className="mt-2 text-sm text-[#100e06]/65">
-            You are not yet a member of any group. Create a group to begin or
+            You are not yet a member of any group. Create a group in the DB or
             join one, then refresh this page.
           </p>
         </div>
@@ -197,12 +106,7 @@ export default function GroupsPage() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h2 className="text-2xl font-bold text-[#100e06]">
-                    <Link
-                      to={`/groups/${group.id}`}
-                      className="transition hover:text-[#881c1c]"
-                    >
-                      {group.name}
-                    </Link>
+                    {group.name}
                   </h2>
                   <p className="mt-2 text-sm text-[#100e06]/65">
                     Group ID {group.id}
