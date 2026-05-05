@@ -9,7 +9,6 @@ const {
 } = require("../controllers/groupsController");
 const { authenticate } = require("../middleware/authenticate");
 const { authorizeGroupAccess } = require("../middleware/groupAuthorization");
-const { GroupMember, GroupInvitation, User } = require("../models");
 const { GroupMember, GroupInvitation, User, GroupHousingPreference } = require("../models");
 const { assertCanAccessGroup } = require("../utils/groupAccess");
 const { asInvitationResponse } = require("../utils/groupInvitationResponse");
