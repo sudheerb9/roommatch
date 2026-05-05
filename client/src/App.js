@@ -10,6 +10,7 @@ import GroupInvitationEntryPage from './pages/GroupInvitationEntryPage';
 import GroupInvitationsInboxPage from './pages/GroupInvitationsInboxPage';
 import GroupsPage from './pages/GroupsPage';
 import HomePage from './pages/HomePage';
+import GroupMatchesPage from './pages/GroupMatchesPage';
 import HomeRedirect from './pages/HomeRedirect';
 import HousingUnitsPage from './pages/HousingUnitsPage';
 import LoginPage from './pages/LoginPage';
@@ -89,6 +90,7 @@ function App() {
           path="/groups/:groupId/housing-preferences"
           element={<GroupHousingPreferencesPage />}
         />
+        <Route path="/groups/:groupId/matches" element={<GroupMatchesPage />} />
         <Route path="/matches" element={<MatchesPage />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="*" element={<Navigate to="/profile" replace />} />

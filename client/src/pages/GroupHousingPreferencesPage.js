@@ -318,6 +318,15 @@ export default function GroupHousingPreferencesPage() {
             .
           </p>
 
+          <p className="text-sm">
+            <Link
+              to={`/groups/${groupId}/matches`}
+              className="font-semibold text-[#881c1c] underline decoration-[#881c1c]/30 underline-offset-4 hover:decoration-[#881c1c]"
+            >
+              View group matches &amp; housing assignment
+            </Link>
+          </p>
+
           {hasStoredRow === false ? (
             <p className="text-sm text-[#100e06]/55">
               No row yet — saving will create one.

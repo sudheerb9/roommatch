@@ -4,6 +4,7 @@ const {
   createGroup,
   getGroupMembers,
   getGroupMatches,
+  declareGroupReady,
   assignGroupHousing,
   getGroupAssignment,
   listUserGroups,
@@ -49,6 +50,7 @@ router.get(
   authorizeGroupAccess,
   getGroupMatches,
 );
+router.post("/:groupId/ready", authenticate, declareGroupReady);
 router.post(
   "/:groupId/assign",
   authenticate,
