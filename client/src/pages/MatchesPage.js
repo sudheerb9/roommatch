@@ -25,7 +25,6 @@ function scoreBadge(score) {
 
 export default function MatchesPage() {
   const navigate = useNavigate();
-  const [viewerUserId, setViewerUserId] = useState(1);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -63,8 +62,6 @@ export default function MatchesPage() {
 
   const canGoNext = Boolean(meta?.hasMore) && !loading;
   const canGoPrev = page > 1 && !loading;
-  const validViewerId = Number.isInteger(viewerUserId) && viewerUserId > 0;
-
   const content = useMemo(() => {
     if (loading) {
       return (
@@ -93,11 +90,26 @@ export default function MatchesPage() {
     }
 
     if (items.length === 0) {
+      const notEligible = meta?.matching_eligible === false;
       return (
         <div className="rounded-3xl border border-[#881c1c]/10 bg-white/70 p-10 text-center">
-          <p className="text-lg font-semibold text-[#100e06]">No matches yet</p>
+          <p className="text-lg font-semibold text-[#100e06]">
+            {notEligible ? 'Matching not active yet' : 'No matches yet'}
+          </p>
           <p className="mt-2 text-sm text-[#100e06]/65">
-            Update your profile and preferences, then refresh this page.
+            {notEligible ? (
+              <>
+                Complete and save your profile on{' '}
+                <Link to="/profile" className="font-semibold text-[#881c1c] underline">
+                  Profile
+                </Link>{' '}
+                to appear in matching and refresh this page.
+              </>
+            ) : (
+              <>
+                Update your profile and preferences, then refresh this page.
+              </>
+            )}
           </p>
         </div>
       );
@@ -133,13 +145,10 @@ export default function MatchesPage() {
 
                 <button
                   type="button"
-                  disabled={!validViewerId}
                   onClick={() =>
-                    navigate(
-                      `/chat?initiator=${viewerUserId}&recipient=${match.user_id}`
-                    )
+                    navigate(`/chat?recipient=${match.user_id}`)
                   }
-                  className="rounded-xl bg-gradient-to-r from-[#7a0019] to-[#881c1c] px-4 py-2 text-sm font-semibold text-white shadow-md shadow-[#7a0019]/20 transition hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-xl bg-gradient-to-r from-[#7a0019] to-[#881c1c] px-4 py-2 text-sm font-semibold text-white shadow-md shadow-[#7a0019]/20 transition hover:shadow-lg"
                 >
                   Start chat
                 </button>
@@ -156,8 +165,6 @@ export default function MatchesPage() {
     loading,
     navigate,
     page,
-    validViewerId,
-    viewerUserId,
   ]);
 
   return (
@@ -178,18 +185,9 @@ export default function MatchesPage() {
           </Link>
         </div>
         <div className="mt-5 grid gap-3 md:grid-cols-[1fr_auto]">
-          <label className="grid gap-1.5 text-xs font-semibold uppercase tracking-wide text-[#100e06]/60">
-            My user ID (for chat)
-            <input
-              type="number"
-              min="1"
-              value={viewerUserId}
-              onChange={(event) =>
-                setViewerUserId(Number(event.target.value) || 1)
-              }
-              className="h-11 rounded-xl border border-[#881c1c]/20 bg-white px-3 text-sm text-[#100e06] outline-none focus:border-[#881c1c]/45 focus:ring-2 focus:ring-[#881c1c]/10"
-            />
-          </label>
+          <p className="text-sm text-[#100e06]/65">
+            Choose a matched profile to open a direct conversation.
+          </p>
           <button
             type="button"
             onClick={() => loadMatches(1)}

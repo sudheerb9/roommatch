@@ -20,6 +20,6 @@ test('shows preferences page headline', async () => {
     </MemoryRouter>,
   );
 
-  const headline = await screen.findByText(/curate your/i);
+  const headline = await screen.findByText(/roommate/i);
   expect(headline).toBeInTheDocument();
 });
