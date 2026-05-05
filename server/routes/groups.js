@@ -2,6 +2,7 @@ const express = require("express");
 
 const {
   getGroupMatches,
+  declareGroupReady,
   assignGroupHousing,
   getGroupAssignment,
 } = require("../controllers/groupsController");
@@ -26,6 +27,7 @@ function parseInviteeUserId(raw) {
 }
 
 router.get("/:groupId/matches", authenticate, getGroupMatches);
+router.post("/:groupId/ready", authenticate, declareGroupReady);
 router.post("/:groupId/assign", authenticate, assignGroupHousing);
 router.get("/:groupId/assignment", authenticate, getGroupAssignment);
 

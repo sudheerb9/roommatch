@@ -7,15 +7,24 @@ export default function GroupHousingEntryPage() {
   const [groupId, setGroupId] = useState('');
   const [navError, setNavError] = useState(null);
 
-  function handleSubmit(e) {
-    e.preventDefault();
+  function goToGroupPath(pathSuffix) {
     const trimmed = groupId.trim();
     if (!/^\d+$/.test(trimmed)) {
       setNavError('Enter a positive numeric group ID (digits only).');
       return;
     }
     setNavError(null);
-    navigate(`/groups/${trimmed}/housing-preferences`);
+    navigate(`/groups/${trimmed}${pathSuffix}`);
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    goToGroupPath('/housing-preferences');
+  }
+
+  function handleGoMatches(e) {
+    e.preventDefault();
+    goToGroupPath('/matches');
   }
 
   return (
@@ -34,12 +43,17 @@ export default function GroupHousingEntryPage() {
             Group housing preferences
           </h1>
           <p className="mb-6 text-sm leading-relaxed text-[#100e06]/65">
-            You need to know your group&apos;s numeric ID from the roster or DB.
-            Opens the edit form for{' '}
+            Enter your group&apos;s numeric ID. You can open housing
+            preferences, or the group matches &amp; housing assignment view
+            (GET{' '}
             <code className="rounded-md bg-[#881c1c]/10 px-1 py-0.5 text-[#881c1c]">
-              GET / PUT /groups/:id/housing-preferences
+              /groups/:id/matches
             </code>
-            .
+            , POST{' '}
+            <code className="rounded-md bg-[#881c1c]/10 px-1 py-0.5 text-[#881c1c]">
+              /groups/:id/assign
+            </code>
+            ).
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -71,12 +85,21 @@ export default function GroupHousingEntryPage() {
                 className="h-12 w-full rounded-2xl border border-transparent bg-white/80 px-4 font-medium text-[#100e06] shadow-sm transition-all focus:border-[#881c1c]/40 focus:bg-white focus:ring-4 focus:ring-[#881c1c]/10"
               />
             </div>
-            <button
-              type="submit"
-              className="h-12 w-full rounded-2xl bg-gradient-to-r from-[#7a0019] to-[#881c1c] text-sm font-semibold text-white shadow-md shadow-[#7a0019]/25 transition hover:opacity-95"
-            >
-              Continue
-            </button>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <button
+                type="submit"
+                className="h-12 w-full rounded-2xl bg-gradient-to-r from-[#7a0019] to-[#881c1c] text-sm font-semibold text-white shadow-md shadow-[#7a0019]/25 transition hover:opacity-95"
+              >
+                Housing preferences
+              </button>
+              <button
+                type="button"
+                onClick={handleGoMatches}
+                className="h-12 w-full rounded-2xl border border-[#881c1c]/25 bg-white/90 text-sm font-semibold text-[#7a0019] shadow-sm transition hover:border-[#881c1c]/40 hover:bg-white"
+              >
+                Matches &amp; assignment
+              </button>
+            </div>
           </form>
         </div>
       </div>

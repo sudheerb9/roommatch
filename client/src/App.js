@@ -8,6 +8,7 @@ import GroupInvitationEntryPage from './pages/GroupInvitationEntryPage';
 import GroupInvitationsInboxPage from './pages/GroupInvitationsInboxPage';
 import GroupHousingEntryPage from './pages/GroupHousingEntryPage';
 import GroupHousingPreferencesPage from './pages/GroupHousingPreferencesPage';
+import GroupMatchesPage from './pages/GroupMatchesPage';
 import HomeRedirect from './pages/HomeRedirect';
 import LoginPage from './pages/LoginPage';
 import MatchesPage from './pages/MatchesPage';
@@ -80,6 +81,7 @@ function App() {
           path="/groups/:groupId/housing-preferences"
           element={<GroupHousingPreferencesPage />}
         />
+        <Route path="/groups/:groupId/matches" element={<GroupMatchesPage />} />
         <Route path="/matches" element={<MatchesPage />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="*" element={<Navigate to="/profile" replace />} />

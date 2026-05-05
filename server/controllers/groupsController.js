@@ -14,6 +14,15 @@ const {
 const { config } = require("../config");
 const { computeMatchScore } = require("../services/matchingService");
 const { getPagination, buildPaginationMeta } = require("../utils/pagination");
+const { assertCanAccessGroup } = require("../utils/groupAccess");
+
+function asGroupLite(group) {
+  return {
+    id: group.id,
+    name: group.name,
+    status: group.status,
+  };
+}
 
 const PREFERENCE_FIELDS = [
   "preferred_sleep_schedule",
@@ -112,6 +121,19 @@ async function ensureGroupMembership(groupId, userId) {
   return Boolean(membership);
 }
 
+function ensureGroupOwnerOrMember(group, userId) {
+  const ownerId =
+    typeof group.owner_user_id === "bigint"
+      ? group.owner_user_id.toString()
+      : String(group.owner_user_id);
+  const uid =
+    typeof userId === "bigint" ? userId.toString() : String(userId);
+  if (ownerId === uid) {
+    return Promise.resolve(true);
+  }
+  return ensureGroupMembership(group.id, userId);
+}
+
 function aggregatePreferences(groupPreferences) {
   const aggregate = {};
 
@@ -155,12 +177,16 @@ async function getGroupMatches(req, res, next) {
       return res.status(404).json({ error: "Group not found" });
     }
 
-    const isMember = await ensureGroupMembership(groupId, req.user.id);
-    if (!isMember) {
+    const canView = await ensureGroupOwnerOrMember(group, req.user.id);
+    if (!canView) {
       return res
         .status(403)
-        .json({ error: "Only group members can view matches" });
+        .json({
+          error: "Only group members or the owner may view matches",
+        });
     }
+
+    const groupLite = asGroupLite(group);
 
     const groupMembers = await GroupMember.findAll({
       where: { group_id: groupId },
@@ -198,6 +224,7 @@ async function getGroupMatches(req, res, next) {
     });
     if (candidateProfiles.length === 0) {
       return res.json({
+        group: groupLite,
         items: [],
         aggregate_preference: aggregatePreference,
         meta: buildPaginationMeta({ page: 1, limit: 20, count: 0 }),
@@ -238,6 +265,7 @@ async function getGroupMatches(req, res, next) {
     );
 
     return res.json({
+      group: groupLite,
       items: pagedItems,
       aggregate_preference: aggregatePreference,
       meta: buildPaginationMeta({
@@ -246,6 +274,55 @@ async function getGroupMatches(req, res, next) {
         count: pagedItems.length,
       }),
     });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function declareGroupReady(req, res, next) {
+  try {
+    const groupId = parsePositiveInt(req.params.groupId);
+    if (!groupId) {
+      return res
+        .status(400)
+        .json({ error: "groupId must be a positive integer" });
+    }
+
+    const access = await assertCanAccessGroup(String(groupId), req.user);
+    if (!access.ok) {
+      return res.status(access.status).json(access.body);
+    }
+
+    const { group } = access;
+
+    if (group.status === "ready") {
+      return res.status(200).json({ group: asGroupLite(group) });
+    }
+
+    if (group.status === "assigned") {
+      return res.status(409).json({
+        error: "Group has already been assigned housing.",
+      });
+    }
+
+    if (group.status === "archived") {
+      return res.status(409).json({
+        error: "Cannot declare an archived group ready.",
+      });
+    }
+
+    const housingPref = await GroupHousingPreference.findByPk(group.id);
+    if (!housingPref) {
+      return res.status(409).json({
+        error:
+          "Save group housing preferences before declaring readiness.",
+      });
+    }
+
+    await group.update({ status: "ready" });
+    await group.reload();
+
+    return res.status(200).json({ group: asGroupLite(group) });
   } catch (error) {
     return next(error);
   }
@@ -265,11 +342,16 @@ async function assignGroupHousing(req, res, next) {
       return res.status(404).json({ error: "Group not found" });
     }
 
-    const isMember = await ensureGroupMembership(groupId, req.user.id);
-    if (!isMember) {
+    const canAssignPermission = await ensureGroupOwnerOrMember(
+      group,
+      req.user.id,
+    );
+    if (!canAssignPermission) {
       return res
         .status(403)
-        .json({ error: "Only group members can assign housing" });
+        .json({
+          error: "Only group members or the owner may assign housing",
+        });
     }
 
     const existingAssignment = await GroupAssignment.findOne({
@@ -279,6 +361,24 @@ async function assignGroupHousing(req, res, next) {
     });
     if (existingAssignment) {
       return res.status(200).json({ assignment: existingAssignment });
+    }
+
+    if (group.status !== "ready") {
+      if (group.status === "forming") {
+        return res.status(409).json({
+          error:
+            "The group must declare readiness before housing can be assigned.",
+        });
+      }
+      if (group.status === "assigned") {
+        return res.status(409).json({
+          error:
+            "This group is already marked assigned but no assignment record was found.",
+        });
+      }
+      return res.status(409).json({
+        error: `Cannot assign housing while the group status is "${group.status}".`,
+      });
     }
 
     const [membersCount, housingPreference, availableUnits] = await Promise.all(
@@ -356,11 +456,14 @@ async function getGroupAssignment(req, res, next) {
       return res.status(404).json({ error: "Group not found" });
     }
 
-    const isMember = await ensureGroupMembership(groupId, req.user.id);
-    if (!isMember) {
-      return res
-        .status(403)
-        .json({ error: "Only group members can view assignment details" });
+    const canSeeAssignment = await ensureGroupOwnerOrMember(
+      group,
+      req.user.id,
+    );
+    if (!canSeeAssignment) {
+      return res.status(403).json({
+        error: "Only group members or the owner may view assignment details",
+      });
     }
 
     const assignment = await GroupAssignment.findOne({
@@ -383,6 +486,7 @@ async function getGroupAssignment(req, res, next) {
 
 module.exports = {
   getGroupMatches,
+  declareGroupReady,
   assignGroupHousing,
   getGroupAssignment,
 };
