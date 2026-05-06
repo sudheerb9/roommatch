@@ -4,11 +4,27 @@ import { Link, useParams } from 'react-router-dom';
 import ApiErrorState from '../components/ui/ApiErrorState';
 import { apiFetch } from '../utils/api';
 
+const AMENITY_OPTIONS = [
+  { key: 'parking', label: 'Parking' },
+  { key: 'elevator', label: 'Elevator' },
+  { key: 'laundry', label: 'Laundry in building' },
+  { key: 'gym', label: 'Gym' },
+  { key: 'study_lounge', label: 'Study lounge' },
+  { key: 'pet_friendly', label: 'Pet friendly' },
+  { key: 'furnished', label: 'Furnished' },
+  { key: 'ac', label: 'Air conditioning' },
+];
+
+const EMPTY_AMENITY_SELECTION = Object.fromEntries(
+  AMENITY_OPTIONS.map((opt) => [opt.key, false])
+);
+
 const EMPTY_FORM = {
   preferred_bedrooms: '',
   preferred_bathrooms: '',
   preferred_floor: '',
-  amenitiesText: '',
+  amenitiesSelected: { ...EMPTY_AMENITY_SELECTION },
+  amenitiesOther: '',
 };
 
 const FLOOR_OPTIONS = [
@@ -31,6 +47,19 @@ function isPlainObject(v) {
   return Boolean(v) && typeof v === 'object' && !Array.isArray(v);
 }
 
+function formatAmenityKey(key) {
+  return String(key)
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (ch) => ch.toUpperCase());
+}
+
+function getDisplayGroupName(name) {
+  const trimmed = typeof name === 'string' ? name.trim() : '';
+  if (!trimmed) return '';
+  if (/^Group \d+$/i.test(trimmed)) return 'My group';
+  return trimmed;
+}
+
 /** @param {Record<string, any> | null} housing_preferences */
 function normalizeFromApi(housing_preferences) {
   if (!housing_preferences || typeof housing_preferences !== 'object') {
@@ -38,6 +67,28 @@ function normalizeFromApi(housing_preferences) {
   }
 
   const p = housing_preferences;
+  const amenitiesSelected = { ...EMPTY_AMENITY_SELECTION };
+  const otherAmenities = [];
+
+  if (isPlainObject(p.amenities)) {
+    for (const [key, value] of Object.entries(p.amenities)) {
+      if (Object.prototype.hasOwnProperty.call(amenitiesSelected, key)) {
+        amenitiesSelected[key] = Boolean(value);
+        continue;
+      }
+      if (key === 'other' && Array.isArray(value)) {
+        for (const row of value) {
+          const item = String(row || '').trim();
+          if (item) otherAmenities.push(item);
+        }
+        continue;
+      }
+      if (value === true) {
+        otherAmenities.push(formatAmenityKey(key));
+      }
+    }
+  }
+
   return {
     preferred_bedrooms: (() => {
       if (p.preferred_bedrooms == null) return '';
@@ -50,10 +101,8 @@ function normalizeFromApi(housing_preferences) {
         : String(p.preferred_bathrooms),
     preferred_floor:
       typeof p.preferred_floor === 'string' ? p.preferred_floor : '',
-    amenitiesText:
-      p.amenities == null
-        ? ''
-        : `${JSON.stringify(p.amenities, null, 2)}\n`.trim(),
+    amenitiesSelected,
+    amenitiesOther: otherAmenities.join('\n'),
   };
 }
 
@@ -99,30 +148,22 @@ function validateAndBuildBody(form) {
     preferred_floor = form.preferred_floor;
   }
 
-  let amenities = null;
-  const rawAmenities = form.amenitiesText.trim();
-
-  if (rawAmenities !== '') {
-    let parsed;
-    try {
-      parsed = JSON.parse(rawAmenities);
-    } catch {
-      return {
-        ok: false,
-        errors,
-        banner: 'Amenities must be valid JSON (or leave the box blank).',
-      };
+  const amenitiesObject = {};
+  for (const opt of AMENITY_OPTIONS) {
+    if (form.amenitiesSelected?.[opt.key] === true) {
+      amenitiesObject[opt.key] = true;
     }
-    if (!isPlainObject(parsed)) {
-      return {
-        ok: false,
-        errors,
-        banner:
-          'Amenities JSON must describe an object {...}, not an array or primitive.',
-      };
-    }
-    amenities = parsed;
   }
+  const otherAmenities = String(form.amenitiesOther || '')
+    .split('\n')
+    .map((row) => row.trim())
+    .filter(Boolean)
+    .slice(0, 30);
+  if (otherAmenities.length > 0) {
+    amenitiesObject.other = otherAmenities;
+  }
+  const amenities =
+    Object.keys(amenitiesObject).length > 0 ? amenitiesObject : null;
 
   if (Object.keys(errors).length > 0) {
     return { ok: false, errors };
@@ -143,6 +184,7 @@ export default function GroupHousingPreferencesPage() {
   const { groupId } = useParams();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [groupName, setGroupName] = useState('');
   const [form, setForm] = useState(EMPTY_FORM);
   const [bannerError, setBannerError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
@@ -167,13 +209,16 @@ export default function GroupHousingPreferencesPage() {
       setFieldErrors({});
       setLoading(true);
       try {
-        const payload = await apiFetch(
-          `/groups/${groupId}/housing-preferences`
-        );
-        const row = payload?.housing_preferences ?? null;
+        const [prefsPayload, groupPayload] = await Promise.all([
+          apiFetch(`/groups/${groupId}/housing-preferences`),
+          apiFetch(`/groups/${groupId}`),
+        ]);
+        const row = prefsPayload?.housing_preferences ?? null;
+        const nextGroupName = getDisplayGroupName(groupPayload?.group?.name);
 
         setHasStoredRow(Boolean(row));
         setForm(normalizeFromApi(row));
+        setGroupName(nextGroupName);
       } catch (err) {
         const message =
           err instanceof Error
@@ -243,6 +288,18 @@ export default function GroupHousingPreferencesPage() {
     setForm((f) => ({ ...f, [field]: value }));
   }
 
+  function handleAmenityToggle(key, checked) {
+    setBannerError('');
+    setSavedMsg(null);
+    setForm((f) => ({
+      ...f,
+      amenitiesSelected: {
+        ...(f.amenitiesSelected || EMPTY_AMENITY_SELECTION),
+        [key]: checked,
+      },
+    }));
+  }
+
   if (!numericGroupIdOk || !groupId) {
     return (
       <div className="relative p-4 md:p-8">
@@ -296,26 +353,21 @@ export default function GroupHousingPreferencesPage() {
     <div className="relative p-4 md:p-8">
       <div className="relative z-10 mx-auto max-w-3xl">
         <Link
-          to="/group-housing"
+          to="/groups"
           className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/50 px-5 py-2.5 text-sm font-medium text-[#100e06]/80 shadow-sm backdrop-blur-sm transition-all hover:bg-white/80 hover:text-[#100e06] hover:shadow-md"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden />
-          Change group ID
+          Change group
         </Link>
 
         <header className="mb-10 text-center space-y-2">
           <h1 className="text-3xl font-bold text-[#100e06] md:text-4xl">
             Housing preferences for{' '}
-            <span className="text-[#881c1c]">group {groupId}</span>
+            <span className="text-[#881c1c]">{groupName || 'your group'}</span>
           </h1>
 
           <p className="mx-auto max-w-xl text-[#100e06]/65">
-            Describes what kind of apartment or unit your group prefers. Saves
-            to the server via{' '}
-            <code className="rounded bg-[#881c1c]/10 px-1 text-sm text-[#881c1c]">
-              PUT /groups/{groupId}/housing-preferences
-            </code>
-            .
+            Describes what kind of apartment or unit your group prefers.
           </p>
 
           <p className="text-sm">
@@ -467,23 +519,47 @@ export default function GroupHousingPreferencesPage() {
               </div>
 
               <p className="-mt-4 text-xs text-[#100e06]/55">
-                Optional JSON object, e.g.{' '}
-                <code className="rounded bg-[#100e06]/08 px-1">
-                  &#123;&quot;parking&quot;:true,&quot;elevator&quot;:true&#125;
-                </code>
-                . Leave blank to clear.
+                Pick your preferred amenities. You can add custom ones below.
               </p>
 
-              <textarea
-                id="amenities-json"
-                rows={8}
-                spellCheck={false}
-                aria-label="Amenities as JSON"
-                placeholder='{\n  "parking": true,\n  "elevator": false\n}'
-                value={form.amenitiesText}
-                onChange={(e) => handleChange('amenitiesText', e.target.value)}
-                className="w-full rounded-2xl border border-transparent bg-white/80 px-4 py-3 font-mono text-sm leading-relaxed text-[#100e06] shadow-sm transition hover:bg-white focus:border-[#881c1c]/40 focus:bg-white focus:ring-4 focus:ring-[#881c1c]/10"
-              />
+              <div className="grid gap-2 sm:grid-cols-2">
+                {AMENITY_OPTIONS.map((opt) => (
+                  <label
+                    key={opt.key}
+                    className="flex items-center gap-3 rounded-xl border border-[#881c1c]/10 bg-white/70 px-3 py-2 text-sm text-[#100e06]"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={Boolean(form.amenitiesSelected?.[opt.key])}
+                      onChange={(e) =>
+                        handleAmenityToggle(opt.key, e.target.checked)
+                      }
+                      className="h-4 w-4 rounded border-[#881c1c]/40 text-[#881c1c] focus:ring-[#881c1c]/25"
+                    />
+                    <span>{opt.label}</span>
+                  </label>
+                ))}
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="amenities-other"
+                  className="ml-1 text-sm font-medium text-[#100e06]/80"
+                >
+                  Other amenities (optional)
+                </label>
+                <textarea
+                  id="amenities-other"
+                  rows={4}
+                  placeholder={'e.g.\nNear bus stop\nQuiet building'}
+                  value={form.amenitiesOther}
+                  onChange={(e) => handleChange('amenitiesOther', e.target.value)}
+                  className="w-full rounded-2xl border border-transparent bg-white/80 px-4 py-3 text-sm leading-relaxed text-[#100e06] shadow-sm transition hover:bg-white focus:border-[#881c1c]/40 focus:bg-white focus:ring-4 focus:ring-[#881c1c]/10"
+                />
+                <p className="ml-1 text-xs text-[#100e06]/55">
+                  Add one custom amenity per line.
+                </p>
+              </div>
             </div>
 
             <button

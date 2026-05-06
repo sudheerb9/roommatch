@@ -10,10 +10,19 @@ const STATUS_BADGES = {
   archived: 'bg-[#f5f3ff] text-[#5b21b6] border-[#c4b5fd]/40',
 };
 
+function formatGroupStatus(status) {
+  if (status === 'ready') return 'Ready for allotment';
+  if (typeof status !== 'string' || status.length === 0) return 'Unknown';
+  return status;
+}
+
 export default function GroupsPage() {
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [actionError, setActionError] = useState('');
+  const [deletingGroupId, setDeletingGroupId] = useState(null);
+  const [declaringReadyGroupId, setDeclaringReadyGroupId] = useState(null);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [createError, setCreateError] = useState(null);
@@ -99,6 +108,15 @@ export default function GroupsPage() {
           </div>
         </div>
       </div>
+
+      {actionError ? (
+        <div
+          role="alert"
+          className="rounded-2xl border border-[#7a0019]/20 bg-[#7a0019]/5 px-4 py-3 text-sm text-[#7a0019]"
+        >
+          {actionError}
+        </div>
+      ) : null}
 
       {showCreateGroup ? (
         <div className="rounded-[2rem] border border-[#881c1c]/10 bg-white/70 p-8 shadow-xl shadow-[#7a0019]/10 backdrop-blur-xl">
@@ -204,14 +222,11 @@ export default function GroupsPage() {
                       {group.name}
                     </Link>
                   </h2>
-                  <p className="mt-2 text-sm text-[#100e06]/65">
-                    Group ID {group.id}
-                  </p>
                 </div>
                 <span
                   className={`rounded-full border px-3 py-1 text-sm font-semibold ${STATUS_BADGES[group.status] || 'bg-slate-100 text-slate-700 border-slate-200'}`}
                 >
-                  {group.status}
+                  {formatGroupStatus(group.status)}
                 </span>
               </div>
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -234,6 +249,13 @@ export default function GroupsPage() {
               </div>
 
               <div className="mt-6 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/chat?group=${group.id}`)}
+                  className="rounded-2xl bg-gradient-to-r from-[#7a0019] to-[#881c1c] px-4 py-3 text-sm font-semibold text-white shadow-md shadow-[#7a0019]/20 transition hover:shadow-lg"
+                >
+                  Start chat
+                </button>
                 <Link
                   to={`/groups/${group.id}/housing-preferences`}
                   className="rounded-2xl border border-[#881c1c]/20 bg-white px-4 py-3 text-sm font-semibold text-[#100e06] transition hover:bg-[#f9f5f2]"
@@ -246,6 +268,74 @@ export default function GroupsPage() {
                 >
                   Invite members
                 </Link>
+                {group.role === 'owner' && group.status === 'forming' ? (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setActionError('');
+                      setDeclaringReadyGroupId(group.id);
+                      try {
+                        const payload = await apiFetch(`/groups/${group.id}/ready`, {
+                          method: 'POST',
+                        });
+                        const nextStatus =
+                          payload?.group?.status && typeof payload.group.status === 'string'
+                            ? payload.group.status
+                            : 'ready';
+                        setGroups((current) =>
+                          current.map((row) =>
+                            row.id === group.id ? { ...row, status: nextStatus } : row
+                          )
+                        );
+                      } catch (err) {
+                        setActionError(
+                          err instanceof Error
+                            ? err.message
+                            : 'Failed to mark group ready for allotment.'
+                        );
+                      } finally {
+                        setDeclaringReadyGroupId(null);
+                      }
+                    }}
+                    disabled={declaringReadyGroupId === group.id}
+                    className="rounded-2xl border border-emerald-400/40 bg-white px-4 py-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {declaringReadyGroupId === group.id
+                      ? 'Declaring...'
+                      : 'Mark ready for allotment'}
+                  </button>
+                ) : null}
+                {group.role === 'owner' ? (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const ok = window.confirm(
+                        `Delete "${group.name}"? This cannot be undone.`
+                      );
+                      if (!ok) return;
+                      setActionError('');
+                      setDeletingGroupId(group.id);
+                      try {
+                        await apiFetch(`/groups/${group.id}`, { method: 'DELETE' });
+                        setGroups((current) =>
+                          current.filter((row) => row.id !== group.id)
+                        );
+                      } catch (err) {
+                        setActionError(
+                          err instanceof Error
+                            ? err.message
+                            : 'Failed to delete group.'
+                        );
+                      } finally {
+                        setDeletingGroupId(null);
+                      }
+                    }}
+                    disabled={deletingGroupId === group.id}
+                    className="rounded-2xl border border-red-400/40 bg-white px-4 py-3 text-sm font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {deletingGroupId === group.id ? 'Deleting...' : 'Delete group'}
+                  </button>
+                ) : null}
               </div>
             </article>
           ))}

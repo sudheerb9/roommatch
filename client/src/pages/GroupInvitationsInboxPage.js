@@ -225,17 +225,8 @@ export default function GroupInvitationsInboxPage() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <h2 className="text-lg font-bold text-[#100e06]">
-                      {groupLabel || `Group #${inv.group_id}`}
+                      {groupLabel || 'Group invitation'}
                     </h2>
-                    <p className="mt-1 text-xs text-[#100e06]/50">
-                      Group ID {inv.group_id}
-                      {typeof inv.id === 'number' ? (
-                        <>
-                          {' '}
-                          · Invite #{inv.id}
-                        </>
-                      ) : null}
-                    </p>
                   </div>
                   <span
                     className={`rounded-full border px-3 py-1 text-xs font-semibold capitalize ${badgeForStatus(
