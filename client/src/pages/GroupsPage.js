@@ -18,6 +18,7 @@ function formatGroupStatus(status) {
 
 export default function GroupsPage() {
   const [groups, setGroups] = useState([]);
+  const [assignmentByGroupId, setAssignmentByGroupId] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionError, setActionError] = useState('');
@@ -35,8 +36,20 @@ export default function GroupsPage() {
     async function loadGroups() {
       try {
         const payload = await apiFetch('/groups');
+        const nextGroups = Array.isArray(payload.groups) ? payload.groups : [];
+        const assignmentEntries = await Promise.all(
+          nextGroups.map(async (group) => {
+            try {
+              const data = await apiFetch(`/groups/${group.id}/assignment`);
+              return [group.id, data.assignment ?? null];
+            } catch (err) {
+              return [group.id, null];
+            }
+          })
+        );
         if (!cancelled) {
-          setGroups(Array.isArray(payload.groups) ? payload.groups : []);
+          setGroups(nextGroups);
+          setAssignmentByGroupId(Object.fromEntries(assignmentEntries));
           setError(null);
         }
       } catch (err) {
@@ -99,12 +112,6 @@ export default function GroupsPage() {
             >
               Create group
             </button>
-            <Link
-              to="/group-housing"
-              className="inline-flex items-center justify-center rounded-2xl border border-[#881c1c]/20 bg-white px-5 py-3 text-sm font-semibold text-[#100e06] shadow-md shadow-[#7a0019]/10 transition hover:bg-[#f9f5f2]"
-            >
-              Manage group housing
-            </Link>
           </div>
         </div>
       </div>
@@ -206,7 +213,7 @@ export default function GroupsPage() {
           </p>
         </div>
       ) : (
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5">
           {groups.map((group) => (
             <article
               key={group.id}
@@ -239,54 +246,95 @@ export default function GroupsPage() {
                   </p>
                 </div>
                 <div className="rounded-3xl border border-[#881c1c]/10 bg-[#f7f1ff] p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-[#5b21b6]/80">
-                    Owner
-                  </p>
+                  <p className="text-xs uppercase tracking-[0.2em] text-[#5b21b6]/80">Owner</p>
                   <p className="mt-2 text-sm font-semibold text-[#100e06]">
-                    {group.owner_user_id}
+                    {group.role === 'owner'
+                      ? 'You'
+                      : group.owner_display_name ||
+                        group.owner_email ||
+                        'Group owner'}
                   </p>
                 </div>
               </div>
+              {assignmentByGroupId[group.id] ? (
+                <div className="mt-4 rounded-2xl border border-emerald-200/80 bg-emerald-50/40 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-emerald-800/80">
+                    Assigned housing
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-[#100e06]">
+                    {assignmentByGroupId[group.id]?.housingUnit?.unit_code || 'Unit'}
+                    {assignmentByGroupId[group.id]?.housingUnit?.building
+                      ? ` · ${assignmentByGroupId[group.id].housingUnit.building}`
+                      : ''}
+                  </p>
+                </div>
+              ) : null}
 
               <div className="mt-6 flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  onClick={() => navigate(`/chat?group=${group.id}`)}
-                  className="rounded-2xl bg-gradient-to-r from-[#7a0019] to-[#881c1c] px-4 py-3 text-sm font-semibold text-white shadow-md shadow-[#7a0019]/20 transition hover:shadow-lg"
+                <Link
+                  to={`/groups/${group.id}`}
+                  className="rounded-2xl border border-[#881c1c]/20 bg-white px-4 py-3 text-sm font-semibold text-[#100e06] transition hover:bg-[#f9f5f2]"
                 >
-                  Start chat
-                </button>
+                  View members
+                </Link>
+                {group.status === 'forming' ? (
+                  <Link
+                    to={`/groups/${group.id}/invite`}
+                    className="rounded-2xl border border-[#881c1c]/20 bg-white px-4 py-3 text-sm font-semibold text-[#100e06] transition hover:bg-[#f9f5f2]"
+                  >
+                    Invite members
+                  </Link>
+                ) : null}
+                {group.status === 'forming' ? (
+                  <Link
+                    to={`/groups/${group.id}/matches`}
+                    className="rounded-2xl border border-[#881c1c]/20 bg-white px-4 py-3 text-sm font-semibold text-[#100e06] transition hover:bg-[#f9f5f2]"
+                  >
+                    Group matches
+                  </Link>
+                ) : null}
+                {group.status !== 'forming' ? (
+                  <Link
+                    to={`/groups/${group.id}/allotment`}
+                    className="rounded-2xl border border-[#2563eb]/30 bg-white px-4 py-3 text-sm font-semibold text-[#1d4ed8] transition hover:bg-[#eff6ff]"
+                  >
+                    View allotment
+                  </Link>
+                ) : null}
                 <Link
                   to={`/groups/${group.id}/housing-preferences`}
                   className="rounded-2xl border border-[#881c1c]/20 bg-white px-4 py-3 text-sm font-semibold text-[#100e06] transition hover:bg-[#f9f5f2]"
                 >
-                  Housing preferences
-                </Link>
-                <Link
-                  to={`/groups/${group.id}/invite`}
-                  className="rounded-2xl border border-[#881c1c]/20 bg-white px-4 py-3 text-sm font-semibold text-[#100e06] transition hover:bg-[#f9f5f2]"
-                >
-                  Invite members
+                  Group housing preferences
                 </Link>
                 {group.role === 'owner' && group.status === 'forming' ? (
                   <button
                     type="button"
                     onClick={async () => {
+                      const confirmed = window.confirm(
+                        `Mark "${group.name}" ready for allotment and run housing assignment now?`
+                      );
+                      if (!confirmed) return;
                       setActionError('');
                       setDeclaringReadyGroupId(group.id);
                       try {
-                        const payload = await apiFetch(`/groups/${group.id}/ready`, {
+                        await apiFetch(`/groups/${group.id}/ready`, {
                           method: 'POST',
                         });
-                        const nextStatus =
-                          payload?.group?.status && typeof payload.group.status === 'string'
-                            ? payload.group.status
-                            : 'ready';
+                        const assignPayload = await apiFetch(`/groups/${group.id}/assign`, {
+                          method: 'POST',
+                        });
                         setGroups((current) =>
                           current.map((row) =>
-                            row.id === group.id ? { ...row, status: nextStatus } : row
+                            row.id === group.id
+                              ? { ...row, status: 'assigned' }
+                              : row
                           )
                         );
+                        setAssignmentByGroupId((prev) => ({
+                          ...prev,
+                          [group.id]: assignPayload?.assignment ?? null,
+                        }));
                       } catch (err) {
                         setActionError(
                           err instanceof Error
@@ -301,10 +349,17 @@ export default function GroupsPage() {
                     className="rounded-2xl border border-emerald-400/40 bg-white px-4 py-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {declaringReadyGroupId === group.id
-                      ? 'Declaring...'
-                      : 'Mark ready for allotment'}
+                      ? 'Processing...'
+                      : 'Mark as ready and allot housing'}
                   </button>
                 ) : null}
+                <button
+                  type="button"
+                  onClick={() => navigate(`/chat?group=${group.id}`)}
+                  className="rounded-2xl bg-gradient-to-r from-[#7a0019] to-[#881c1c] px-4 py-3 text-sm font-semibold text-white shadow-md shadow-[#7a0019]/20 transition hover:shadow-lg"
+                >
+                  Chat within group
+                </button>
                 {group.role === 'owner' ? (
                   <button
                     type="button"

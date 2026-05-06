@@ -2,17 +2,14 @@ import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import './App.css';
 import AppLayout from './app/AppLayout';
 import ChatPage from './pages/ChatPage';
+import GroupAllotmentPage from './pages/GroupAllotmentPage';
 import GroupDetailPage from './pages/GroupDetailPage';
-import GroupHousingEntryPage from './pages/GroupHousingEntryPage';
 import GroupHousingPreferencesPage from './pages/GroupHousingPreferencesPage';
 import GroupInvitationComposePage from './pages/GroupInvitationComposePage';
-import GroupInvitationEntryPage from './pages/GroupInvitationEntryPage';
 import GroupInvitationsInboxPage from './pages/GroupInvitationsInboxPage';
 import GroupsPage from './pages/GroupsPage';
 import HomePage from './pages/HomePage';
 import GroupMatchesPage from './pages/GroupMatchesPage';
-import HomeRedirect from './pages/HomeRedirect';
-import HousingUnitsPage from './pages/HousingUnitsPage';
 import LoginPage from './pages/LoginPage';
 import MatchesPage from './pages/MatchesPage';
 import './pages/Pages.css';
@@ -67,20 +64,18 @@ function ProtectedLoginRoute() {
 function App() {
   return (
     <Routes>
+      <Route path="/" element={<HomeSection />} />
       <Route path="/login" element={<ProtectedLoginRoute />} />
       <Route path="/home/*" element={<HomeSection />} />
       <Route element={<AppLayout />}>
-        <Route path="/" element={<HomeRedirect />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/preferences" element={<PreferencesPage />} />
         <Route path="/groups" element={<GroupsPage />} />
         <Route path="/groups/:groupId" element={<GroupDetailPage />} />
-        <Route path="/housing-units" element={<HousingUnitsPage />} />
-        <Route path="/group-housing" element={<GroupHousingEntryPage />} />
-        <Route
-          path="/group-invitations"
-          element={<GroupInvitationEntryPage />}
-        />
+        <Route path="/groups/:groupId/allotment" element={<GroupAllotmentPage />} />
+        <Route path="/housing-units" element={<Navigate to="/groups" replace />} />
+        <Route path="/group-housing" element={<Navigate to="/groups" replace />} />
+        <Route path="/group-invitations" element={<Navigate to="/groups" replace />} />
         <Route path="/invitations" element={<GroupInvitationsInboxPage />} />
         <Route
           path="/groups/:groupId/invite"
@@ -92,7 +87,12 @@ function App() {
         />
         <Route path="/groups/:groupId/matches" element={<GroupMatchesPage />} />
         <Route path="/matches" element={<MatchesPage />} />
-        <Route path="/chat" element={<ChatPage />} />
+        <Route
+          path="/chat"
+          element={
+            isAuthenticated() ? <ChatPage /> : <Navigate to="/login" replace />
+          }
+        />
         <Route path="*" element={<Navigate to="/profile" replace />} />
       </Route>
     </Routes>

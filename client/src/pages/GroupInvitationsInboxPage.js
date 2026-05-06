@@ -112,12 +112,12 @@ export default function GroupInvitationsInboxPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-[#100e06]">
-              Invitations inbox
+              Invitations
             </h1>
             <p className="mt-1 text-sm text-[#100e06]/65">
               Invites people sent{' '}
               <span className="font-medium text-[#100e06]/85">to you</span>.
-              Pending rows can be accepted or rejected here.
+              Pending invitations can be accepted or rejected here.
             </p>
           </div>
           <button

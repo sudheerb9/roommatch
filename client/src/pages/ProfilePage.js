@@ -235,18 +235,7 @@ export default function ProfilePage() {
   return (
     <div className="relative">
       <div className="relative z-10 mx-auto max-w-5xl">
-        <div className="mb-8 flex items-center justify-between sm:mb-12">
-          <Link to="/home" className="group">
-            <div className="flex items-center gap-3 pl-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 text-[#100e06] shadow-sm backdrop-blur transition-all duration-300 group-hover:scale-110 group-hover:bg-[#881c1c] group-hover:text-white">
-                <span className="text-lg leading-none">←</span>
-              </div>
-              <span className="hidden font-semibold text-[#100e06]/80 transition-colors group-hover:text-[#100e06] sm:block">
-                Back
-              </span>
-            </div>
-          </Link>
-
+        <div className="mb-8 flex items-center justify-end sm:mb-12">
           <div className="rounded-full border border-[#881c1c]/15 bg-white/60 px-4 py-2 shadow-sm backdrop-blur">
             <span className="text-xs font-bold uppercase tracking-widest text-[#881c1c]">
               Profile View

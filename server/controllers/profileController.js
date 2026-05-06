@@ -1,4 +1,4 @@
-const { Profile, MatchPreference } = require("../models");
+const { Profile, MatchPreference, User } = require("../models");
 const { userAccountIsActive } = require("../utils/userAccount");
 
 const PROFILE_ENUMS = {
@@ -277,7 +277,51 @@ async function updateMyProfile(req, res, next) {
   }
 }
 
+async function getUserProfile(req, res, next) {
+  try {
+    const rawUserId = req.params.userId;
+    const userId = Number(rawUserId);
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return res.status(400).json({ error: "Invalid user id" });
+    }
+
+    const user = await User.findByPk(userId, {
+      attributes: ["id", "email", "display_name", "is_active"],
+    });
+    if (!user || !userAccountIsActive(user)) {
+      return res.status(404).json({ error: "Profile not found" });
+    }
+
+    const profile = await Profile.findOne({ where: { user_id: userId } });
+    if (!profile) {
+      return res.status(404).json({ error: "Profile not found" });
+    }
+
+    return res.status(200).json({
+      user: {
+        id: user.id,
+        email: user.email,
+        display_name: user.display_name,
+      },
+      profile: {
+        bio: profile.bio,
+        gender: profile.gender,
+        sleep_schedule: profile.sleep_schedule,
+        cleanliness_level: profile.cleanliness_level,
+        noise_tolerance: profile.noise_tolerance,
+        smoking_preference: profile.smoking_preference,
+        drinking_preference: profile.drinking_preference,
+        social_behavior: profile.social_behavior,
+        study_preferences: profile.study_preferences,
+      },
+    });
+  } catch (err) {
+    return next(err);
+  }
+}
+
 module.exports = {
   getMyProfile,
   updateMyProfile,
+  getUserProfile,
 };

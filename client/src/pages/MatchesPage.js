@@ -30,6 +30,10 @@ export default function MatchesPage() {
   const [error, setError] = useState('');
   const [items, setItems] = useState([]);
   const [meta, setMeta] = useState(null);
+  const [profileLoadingId, setProfileLoadingId] = useState(null);
+  const [profileError, setProfileError] = useState('');
+  const [expandedUserId, setExpandedUserId] = useState(null);
+  const [profileByUserId, setProfileByUserId] = useState({});
 
   const loadMatches = useCallback(
     async (nextPage = page) => {
@@ -59,6 +63,28 @@ export default function MatchesPage() {
   useEffect(() => {
     loadMatches(1);
   }, [loadMatches]);
+
+  async function handleViewProfile(userId) {
+    if (expandedUserId === userId) {
+      setExpandedUserId(null);
+      return;
+    }
+    if (profileByUserId[userId]) {
+      setExpandedUserId(userId);
+      return;
+    }
+    setProfileLoadingId(userId);
+    setProfileError('');
+    try {
+      const payload = await apiFetch(`/profile/${userId}`);
+      setProfileByUserId((prev) => ({ ...prev, [userId]: payload }));
+      setExpandedUserId(userId);
+    } catch (err) {
+      setProfileError(err instanceof Error ? err.message : 'Failed to load profile.');
+    } finally {
+      setProfileLoadingId(null);
+    }
+  }
 
   const canGoNext = Boolean(meta?.hasMore) && !loading;
   const canGoPrev = page > 1 && !loading;
@@ -126,9 +152,13 @@ export default function MatchesPage() {
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h3 className="text-lg font-bold text-[#100e06]">
+                  <button
+                    type="button"
+                    onClick={() => handleViewProfile(match.user_id)}
+                    className="text-left text-lg font-bold text-[#100e06] underline-offset-2 hover:text-[#881c1c] hover:underline"
+                  >
                     {match.display_name || 'Roommate candidate'}
-                  </h3>
+                  </button>
                   <p className="text-sm text-[#100e06]/60">{match.email}</p>
                 </div>
                 <span className="rounded-xl border border-[#881c1c]/15 bg-[#881c1c]/8 px-2.5 py-1 text-sm font-bold text-[#7a0019]">
@@ -153,6 +183,26 @@ export default function MatchesPage() {
                   Start chat
                 </button>
               </div>
+              <button
+                type="button"
+                onClick={() => handleViewProfile(match.user_id)}
+                disabled={profileLoadingId === match.user_id}
+                className="mt-3 text-xs font-semibold text-[#7a0019] underline underline-offset-2 disabled:opacity-60"
+              >
+                {profileLoadingId === match.user_id
+                  ? 'Loading details…'
+                  : expandedUserId === match.user_id
+                    ? 'Hide details'
+                    : 'View details'}
+              </button>
+              {expandedUserId === match.user_id && profileByUserId[match.user_id] ? (
+                <div className="mt-3 rounded-2xl border border-[#881c1c]/10 bg-white/90 p-3">
+                  <p className="text-xs uppercase tracking-wide text-[#100e06]/55">Bio</p>
+                  <p className="mt-1 text-sm text-[#100e06]/80">
+                    {profileByUserId[match.user_id]?.profile?.bio || 'No bio shared yet.'}
+                  </p>
+                </div>
+              ) : null}
             </article>
           );
         })}
@@ -165,6 +215,9 @@ export default function MatchesPage() {
     loading,
     navigate,
     page,
+    expandedUserId,
+    profileByUserId,
+    profileLoadingId,
   ]);
 
   return (
@@ -174,7 +227,7 @@ export default function MatchesPage() {
           <div>
             <h1 className="text-2xl font-bold text-[#100e06]">Your Matches</h1>
             <p className="mt-1 text-sm text-[#100e06]/65">
-              Ranked candidates powered by your preference scores in Redis.
+              Ranked candidates based on how well their lifestyle matches your preferences.
             </p>
           </div>
           <Link
@@ -200,6 +253,11 @@ export default function MatchesPage() {
       </div>
 
       {content}
+      {profileError ? (
+        <div className="rounded-xl border border-[#7a0019]/25 bg-[#7a0019]/5 px-4 py-3 text-sm text-[#7a0019]">
+          {profileError}
+        </div>
+      ) : null}
 
       <div className="flex items-center justify-between rounded-2xl border border-[#881c1c]/10 bg-white/70 px-4 py-3">
         <p className="text-sm text-[#100e06]/65">

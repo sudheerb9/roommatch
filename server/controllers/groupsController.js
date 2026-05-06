@@ -199,6 +199,11 @@ async function listUserGroups(req, res, next) {
           as: "members",
           attributes: ["user_id", "role"],
         },
+        {
+          model: User,
+          as: "owner",
+          attributes: ["id", "display_name", "email"],
+        },
       ],
       distinct: true,
       order: [["created_at", "DESC"]],
@@ -247,6 +252,8 @@ async function listUserGroups(req, res, next) {
         name: group.name,
         status: group.status,
         owner_user_id: group.owner_user_id,
+        owner_display_name: group.owner?.display_name ?? null,
+        owner_email: group.owner?.email ?? null,
         member_count: memberCountByGroupId.get(String(group.id)) ?? 0,
       })),
     });
@@ -259,6 +266,11 @@ async function getGroupDetails(req, res, next) {
   try {
     const group = await Group.findByPk(req.group.id, {
       include: [
+        {
+          model: User,
+          as: "owner",
+          attributes: ["id", "display_name", "email"],
+        },
         {
           model: GroupMember,
           as: "members",
@@ -277,6 +289,8 @@ async function getGroupDetails(req, res, next) {
         name: group.name,
         status: group.status,
         owner_user_id: group.owner_user_id,
+        owner_display_name: group.owner?.display_name ?? null,
+        owner_email: group.owner?.email ?? null,
         member_ids: group.members.map((member) => member.user_id),
       },
     });
