@@ -1,3 +1,4 @@
+import { ArrowLeft } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import ApiErrorState from '../components/ui/ApiErrorState';
@@ -10,6 +11,7 @@ export default function GroupDetailPage() {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [assignment, setAssignment] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -22,9 +24,10 @@ export default function GroupDetailPage() {
       }
 
       try {
-        const [groupPayload, membersPayload] = await Promise.all([
+        const [groupPayload, membersPayload, assignmentPayload] = await Promise.all([
           apiFetch(`/groups/${groupId}`),
           apiFetch(`/groups/${groupId}/members`),
+          apiFetch(`/groups/${groupId}/assignment`).catch(() => null),
         ]);
 
         if (!cancelled) {
@@ -32,6 +35,7 @@ export default function GroupDetailPage() {
           setMembers(
             Array.isArray(membersPayload.members) ? membersPayload.members : []
           );
+          setAssignment(assignmentPayload?.assignment ?? null);
           setError(null);
         }
       } catch (err) {
@@ -87,26 +91,26 @@ export default function GroupDetailPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div className="rounded-[2rem] border border-[#881c1c]/10 bg-white/70 p-8 shadow-xl shadow-[#7a0019]/10 backdrop-blur-xl">
+        <Link
+          to="/groups"
+          className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/50 px-5 py-2.5 text-sm font-medium text-[#100e06]/80 shadow-sm backdrop-blur-sm transition-all hover:bg-white/80 hover:text-[#100e06] hover:shadow-md"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden />
+          Back to groups
+        </Link>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-[#100e06]">{group.name}</h1>
             <p className="mt-2 text-sm text-[#100e06]/65">
-              Group {group.id} · status {statusLabel}
+              Status {statusLabel}
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => navigate(`/chat?group=${group.id}`)}
-              className="rounded-2xl bg-gradient-to-r from-[#7a0019] to-[#881c1c] px-5 py-3 text-sm font-semibold text-white shadow-md shadow-[#7a0019]/20 transition hover:shadow-lg"
-            >
-              Start chat
-            </button>
             <Link
-              to={`/groups/${group.id}/housing-preferences`}
-              className="rounded-2xl bg-[#881c1c] px-5 py-3 text-sm font-semibold text-white shadow-md shadow-[#7a0019]/20 transition hover:bg-[#7a0019]"
+              to={`/groups/${group.id}`}
+              className="rounded-2xl border border-[#881c1c]/20 bg-white px-5 py-3 text-sm font-semibold text-[#100e06] transition hover:bg-[#f9f5f2]"
             >
-              Housing preferences
+              View members
             </Link>
             <Link
               to={`/groups/${group.id}/invite`}
@@ -114,6 +118,25 @@ export default function GroupDetailPage() {
             >
               Invite members
             </Link>
+            <Link
+              to={`/groups/${group.id}/matches`}
+              className="rounded-2xl border border-[#881c1c]/20 bg-white px-5 py-3 text-sm font-semibold text-[#100e06] transition hover:bg-[#f9f5f2]"
+            >
+              Group matches
+            </Link>
+            <Link
+              to={`/groups/${group.id}/housing-preferences`}
+              className="rounded-2xl bg-[#881c1c] px-5 py-3 text-sm font-semibold text-white shadow-md shadow-[#7a0019]/20 transition hover:bg-[#7a0019]"
+            >
+              Group housing preferences
+            </Link>
+            <button
+              type="button"
+              onClick={() => navigate(`/chat?group=${group.id}`)}
+              className="rounded-2xl bg-gradient-to-r from-[#7a0019] to-[#881c1c] px-5 py-3 text-sm font-semibold text-white shadow-md shadow-[#7a0019]/20 transition hover:shadow-lg"
+            >
+              Chat within group
+            </button>
           </div>
         </div>
       </div>
@@ -124,7 +147,9 @@ export default function GroupDetailPage() {
             Owner
           </h2>
           <p className="mt-3 text-xl font-semibold text-[#100e06]">
-            {group.owner_user_id}
+            {group.role === 'owner'
+              ? 'You'
+              : group.owner_display_name || group.owner_email || 'Group owner'}
           </p>
         </div>
         <div className="rounded-[2rem] border border-[#881c1c]/10 bg-[#f7f1ff] p-6 shadow-xl shadow-[#7a0019]/5">
@@ -137,11 +162,16 @@ export default function GroupDetailPage() {
         </div>
         <div className="rounded-[2rem] border border-[#881c1c]/10 bg-white p-6 shadow-xl shadow-[#7a0019]/5">
           <h2 className="text-sm uppercase tracking-[0.2em] text-[#100e06]/80">
-            Group id
+            Housing
           </h2>
           <p className="mt-3 text-xl font-semibold text-[#100e06]">
-            {group.id}
+            {assignment?.housingUnit?.unit_code || 'Not allotted'}
           </p>
+          {assignment?.housingUnit?.building ? (
+            <p className="mt-1 text-sm text-[#100e06]/60">
+              {assignment.housingUnit.building}
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -167,7 +197,7 @@ export default function GroupDetailPage() {
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-lg font-semibold text-[#100e06]">
-                    {member.display_name || `User ${member.id}`}
+                    {member.display_name || 'Member'}
                   </p>
                   <p className="text-sm text-[#100e06]/65">
                     {member.email || 'No email available'}

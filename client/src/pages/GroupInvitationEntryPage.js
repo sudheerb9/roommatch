@@ -11,7 +11,7 @@ export default function GroupInvitationEntryPage() {
     e.preventDefault();
     const trimmed = groupId.trim();
     if (!/^\d+$/.test(trimmed)) {
-      setNavError('Enter a positive numeric group ID (digits only).');
+      setNavError('Enter a valid group code.');
       return;
     }
     setNavError(null);
@@ -34,13 +34,7 @@ export default function GroupInvitationEntryPage() {
             Send a group invitation
           </h1>
           <p className="mb-6 text-sm leading-relaxed text-[#100e06]/65">
-            Enter the group you can manage (owner or member). You’ll choose a
-            teammate by their numeric user ID (for example from Matches) and
-            optional note. Uses{' '}
-            <code className="rounded-md bg-[#881c1c]/10 px-1 py-0.5 text-[#881c1c]">
-              POST /groups/:id/invitations
-            </code>
-            .
+            Enter the group code you can manage to open invitation tools for that group.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -57,7 +51,7 @@ export default function GroupInvitationEntryPage() {
                 htmlFor="invite-group-id"
                 className="ml-1 text-sm font-medium text-[#100e06]/80"
               >
-                Group ID
+                Group code
               </label>
               <input
                 id="invite-group-id"

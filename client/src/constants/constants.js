@@ -26,6 +26,7 @@ export const features = [
     title: 'Realtime Chat',
     description:
       'Connect instantly with potential roommates through our seamless chat feature. Get to know each other before deciding to meet in person.',
+    to: '/chat',
   },
 ];
 

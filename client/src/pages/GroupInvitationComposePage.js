@@ -1,5 +1,5 @@
-import { ArrowLeft } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { apiFetch } from '../utils/api';
 
@@ -176,7 +176,7 @@ export default function GroupInvitationComposePage() {
     return (
       <div className="relative p-4 md:p-8">
         <div className="relative z-10 mx-auto max-w-lg rounded-[2rem] border border-[#7a0019]/25 bg-[#7a0019]/10 px-6 py-5 text-[#100e06]">
-          Invalid group ID in URL.{' '}
+          Invalid group link.{' '}
           <Link
             to="/group-invitations"
             className="ml-1 font-semibold text-[#7a0019] underline"
@@ -194,15 +194,16 @@ export default function GroupInvitationComposePage() {
   return (
     <div className="relative p-4 md:p-8">
       <div className="relative z-10 mx-auto max-w-3xl">
-        <Link
-          to="/groups"
-          className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/50 px-5 py-2.5 text-sm font-medium text-[#100e06]/80 shadow-sm backdrop-blur-sm transition-all hover:bg-white/80 hover:text-[#100e06] hover:shadow-md"
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden />
-          Change group
-        </Link>
-
         <header className="mb-10 space-y-2 text-center">
+          <div className="mb-4 flex justify-start">
+            <Link
+              to="/groups"
+              className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/50 px-5 py-2.5 text-sm font-medium text-[#100e06]/80 shadow-sm backdrop-blur-sm transition-all hover:bg-white/80 hover:text-[#100e06] hover:shadow-md"
+            >
+              <ArrowLeft className="h-4 w-4" aria-hidden />
+              Back to groups
+            </Link>
+          </div>
           <h1 className="text-3xl font-bold text-[#100e06] md:text-4xl">
             Invite people to <span className="text-[#881c1c]">{groupName}</span>
           </h1>
@@ -311,7 +312,7 @@ export default function GroupInvitationComposePage() {
                   {candidates.map((user) => {
                     const userId = Number(user.id);
                     const checked = selectedSet.has(userId);
-                    const label = user.display_name || user.email || `User ${userId}`;
+                    const label = user.display_name || user.email || 'Candidate';
                     return (
                       <li key={userId}>
                         <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[#881c1c]/10 bg-white/80 px-3 py-2.5 hover:border-[#881c1c]/25">
@@ -371,7 +372,7 @@ export default function GroupInvitationComposePage() {
                 <ul className="mt-2 list-disc space-y-1 pl-5">
                   {skipped.slice(0, 8).map((row) => (
                     <li key={`${row.invitee_user_id}-${row.error}`}>
-                      User #{row.invitee_user_id}: {row.error}
+                      Invitee: {row.error}
                     </li>
                   ))}
                   {skipped.length > 8 ? (

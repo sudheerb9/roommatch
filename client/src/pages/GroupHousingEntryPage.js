@@ -10,7 +10,7 @@ export default function GroupHousingEntryPage() {
   function goToGroupPath(pathSuffix) {
     const trimmed = groupId.trim();
     if (!/^\d+$/.test(trimmed)) {
-      setNavError('Enter a positive numeric group ID (digits only).');
+      setNavError('Enter a valid group code.');
       return;
     }
     setNavError(null);
@@ -43,17 +43,8 @@ export default function GroupHousingEntryPage() {
             Group housing preferences
           </h1>
           <p className="mb-6 text-sm leading-relaxed text-[#100e06]/65">
-            Enter your group&apos;s numeric ID. You can open housing
-            preferences, or the group matches &amp; housing assignment view
-            (GET{' '}
-            <code className="rounded-md bg-[#881c1c]/10 px-1 py-0.5 text-[#881c1c]">
-              /groups/:id/matches
-            </code>
-            , POST{' '}
-            <code className="rounded-md bg-[#881c1c]/10 px-1 py-0.5 text-[#881c1c]">
-              /groups/:id/assign
-            </code>
-            ).
+            Enter your group code to open housing preferences or the group
+            matching and assignment view.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -70,7 +61,7 @@ export default function GroupHousingEntryPage() {
                 htmlFor="group-id"
                 className="ml-1 text-sm font-medium text-[#100e06]/80"
               >
-                Group ID
+                Group code
               </label>
               <input
                 id="group-id"

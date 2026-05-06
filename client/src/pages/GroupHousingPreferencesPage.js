@@ -1,5 +1,5 @@
-import { ArrowLeft } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import ApiErrorState from '../components/ui/ApiErrorState';
 import { apiFetch } from '../utils/api';
@@ -304,12 +304,12 @@ export default function GroupHousingPreferencesPage() {
     return (
       <div className="relative p-4 md:p-8">
         <div className="relative z-10 mx-auto max-w-lg rounded-[2rem] border border-[#7a0019]/25 bg-[#7a0019]/10 px-6 py-5 text-[#100e06]">
-          Invalid group ID in URL.{' '}
+          Invalid group link.{' '}
           <Link
             to="/group-housing"
             className="ml-1 font-semibold text-[#881c1c] underline"
           >
-            Pick a valid group ID
+            Pick a valid group
           </Link>
           .
         </div>
@@ -352,15 +352,16 @@ export default function GroupHousingPreferencesPage() {
   return (
     <div className="relative p-4 md:p-8">
       <div className="relative z-10 mx-auto max-w-3xl">
-        <Link
-          to="/groups"
-          className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/50 px-5 py-2.5 text-sm font-medium text-[#100e06]/80 shadow-sm backdrop-blur-sm transition-all hover:bg-white/80 hover:text-[#100e06] hover:shadow-md"
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden />
-          Change group
-        </Link>
-
         <header className="mb-10 text-center space-y-2">
+          <div className="mb-4 flex justify-start">
+            <Link
+              to="/groups"
+              className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/50 px-5 py-2.5 text-sm font-medium text-[#100e06]/80 shadow-sm backdrop-blur-sm transition-all hover:bg-white/80 hover:text-[#100e06] hover:shadow-md"
+            >
+              <ArrowLeft className="h-4 w-4" aria-hidden />
+              Back to groups
+            </Link>
+          </div>
           <h1 className="text-3xl font-bold text-[#100e06] md:text-4xl">
             Housing preferences for{' '}
             <span className="text-[#881c1c]">{groupName || 'your group'}</span>
@@ -381,7 +382,7 @@ export default function GroupHousingPreferencesPage() {
 
           {hasStoredRow === false ? (
             <p className="text-sm text-[#100e06]/55">
-              No row yet — saving will create one.
+              No preferences saved yet.
             </p>
           ) : null}
         </header>
