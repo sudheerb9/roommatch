@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import ApiErrorState from '../components/ui/ApiErrorState';
 import { apiFetch } from '../utils/api';
 
 export default function GroupDetailPage() {
   const { groupId } = useParams();
+  const navigate = useNavigate();
   const [group, setGroup] = useState(null);
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -80,6 +81,9 @@ export default function GroupDetailPage() {
     return null;
   }
 
+  const statusLabel =
+    group.status === 'ready' ? 'ready for allotment' : group.status;
+
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div className="rounded-[2rem] border border-[#881c1c]/10 bg-white/70 p-8 shadow-xl shadow-[#7a0019]/10 backdrop-blur-xl">
@@ -87,10 +91,17 @@ export default function GroupDetailPage() {
           <div>
             <h1 className="text-3xl font-bold text-[#100e06]">{group.name}</h1>
             <p className="mt-2 text-sm text-[#100e06]/65">
-              Group {group.id} · status {group.status}
+              Group {group.id} · status {statusLabel}
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => navigate(`/chat?group=${group.id}`)}
+              className="rounded-2xl bg-gradient-to-r from-[#7a0019] to-[#881c1c] px-5 py-3 text-sm font-semibold text-white shadow-md shadow-[#7a0019]/20 transition hover:shadow-lg"
+            >
+              Start chat
+            </button>
             <Link
               to={`/groups/${group.id}/housing-preferences`}
               className="rounded-2xl bg-[#881c1c] px-5 py-3 text-sm font-semibold text-white shadow-md shadow-[#7a0019]/20 transition hover:bg-[#7a0019]"

@@ -32,11 +32,6 @@ module.exports = (sequelize) => {
           if (!Array.isArray(this.participant_user_ids)) {
             throw new Error("participant_user_ids must be an array");
           }
-          if (this.participant_user_ids.length < 2) {
-            throw new Error(
-              "participant_user_ids must include at least 2 users",
-            );
-          }
 
           const seen = new Set();
           for (const userId of this.participant_user_ids) {
@@ -54,11 +49,11 @@ module.exports = (sequelize) => {
             seen.add(numericId);
           }
 
-          if (
-            this.kind === "direct" &&
-            this.participant_user_ids.length !== 2
-          ) {
+          if (this.kind === "direct" && this.participant_user_ids.length !== 2) {
             throw new Error("direct chat must contain exactly 2 participants");
+          }
+          if (this.kind === "group" && this.participant_user_ids.length < 1) {
+            throw new Error("group chat must contain at least 1 participant");
           }
 
           if (this.kind === "direct" && !this.direct_chat_key) {

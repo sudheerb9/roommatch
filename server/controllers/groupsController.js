@@ -21,11 +21,28 @@ const {
 } = require("../utils/assignmentSafety");
 const { assertCanAccessGroup } = require("../utils/groupAccess");
 
-function asGroupLite(group) {
+function asGroupLite(group, requesterUserId = null) {
+  const ownerUserId =
+    typeof group.owner_user_id === "bigint"
+      ? group.owner_user_id.toString()
+      : String(group.owner_user_id);
+  const requesterId =
+    requesterUserId == null
+      ? null
+      : typeof requesterUserId === "bigint"
+        ? requesterUserId.toString()
+        : String(requesterUserId);
   return {
     id: group.id,
     name: group.name,
     status: group.status,
+    owner_user_id: group.owner_user_id,
+    role:
+      requesterId && requesterId === ownerUserId
+        ? "owner"
+        : requesterId
+          ? "member"
+          : undefined,
   };
 }
 
@@ -180,20 +197,57 @@ async function listUserGroups(req, res, next) {
         {
           model: GroupMember,
           as: "members",
-          attributes: ["user_id"],
+          attributes: ["user_id", "role"],
         },
       ],
       distinct: true,
       order: [["created_at", "DESC"]],
     });
 
+    const groupIds = groups.map((group) => group.id);
+    const memberCounts =
+      groupIds.length === 0
+        ? []
+        : await GroupMember.findAll({
+            where: { group_id: { [Op.in]: groupIds } },
+            attributes: [
+              "group_id",
+              [sequelize.fn("COUNT", sequelize.col("id")), "member_count"],
+            ],
+            group: ["group_id"],
+            raw: true,
+          });
+    const memberCountByGroupId = new Map(
+      memberCounts.map((row) => [String(row.group_id), Number(row.member_count) || 0]),
+    );
+
+    const requesterId =
+      typeof req.user.id === "bigint" ? req.user.id.toString() : String(req.user.id);
+
     return res.status(200).json({
       groups: groups.map((group) => ({
+        role: (() => {
+          const ownerId =
+            typeof group.owner_user_id === "bigint"
+              ? group.owner_user_id.toString()
+              : String(group.owner_user_id);
+          if (ownerId === requesterId) return "owner";
+          const membership = Array.isArray(group.members)
+            ? group.members.find((member) => {
+                const memberUserId =
+                  typeof member.user_id === "bigint"
+                    ? member.user_id.toString()
+                    : String(member.user_id);
+                return memberUserId === requesterId;
+              })
+            : null;
+          return membership?.role || "member";
+        })(),
         id: group.id,
         name: group.name,
         status: group.status,
         owner_user_id: group.owner_user_id,
-        member_count: group.members ? group.members.length : 0,
+        member_count: memberCountByGroupId.get(String(group.id)) ?? 0,
       })),
     });
   } catch (error) {
@@ -338,7 +392,7 @@ async function getGroupMatches(req, res, next) {
       });
     }
 
-    const groupLite = asGroupLite(group);
+    const groupLite = asGroupLite(group, req.user.id);
 
     const groupMembers = await GroupMember.findAll({
       where: { group_id: groupId },
@@ -446,9 +500,20 @@ async function declareGroupReady(req, res, next) {
     }
 
     const { group } = access;
+    const ownerId =
+      typeof group.owner_user_id === "bigint"
+        ? group.owner_user_id.toString()
+        : String(group.owner_user_id);
+    const requesterId =
+      typeof req.user.id === "bigint" ? req.user.id.toString() : String(req.user.id);
+    if (ownerId !== requesterId) {
+      return res
+        .status(403)
+        .json({ error: "Only the group owner may declare readiness." });
+    }
 
     if (group.status === "ready") {
-      return res.status(200).json({ group: asGroupLite(group) });
+      return res.status(200).json({ group: asGroupLite(group, req.user.id) });
     }
 
     if (group.status === "assigned") {
@@ -473,7 +538,7 @@ async function declareGroupReady(req, res, next) {
     await group.update({ status: "ready" });
     await group.reload();
 
-    return res.status(200).json({ group: asGroupLite(group) });
+    return res.status(200).json({ group: asGroupLite(group, req.user.id) });
   } catch (error) {
     return next(error);
   }

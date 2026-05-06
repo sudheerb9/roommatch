@@ -1,11 +1,10 @@
 import { LogOut } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import LandingBackdrop from '../components/layout/LandingBackdrop';
 import { getBearerToken, setBearerToken } from '../utils/api';
 
 function TopNav() {
-  const [tokenPreview, setTokenPreview] = useState(() => getBearerToken());
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -23,7 +22,6 @@ function TopNav() {
       // Clear token from localStorage
       window.localStorage.removeItem('roommatch_bearer_token');
       setBearerToken(null);
-      setTokenPreview(null);
 
       // Redirect to home
       navigate('/home');
@@ -41,11 +39,6 @@ function TopNav() {
         ? 'border-transparent bg-[#881c1c] text-white shadow-md shadow-[#7a0019]/25'
         : 'border-[#881c1c]/20 bg-white/70 text-[#100e06]/80 hover:border-[#881c1c]/35 hover:bg-white hover:text-[#100e06]',
     ].join(' ');
-
-  const tokenLabel = useMemo(() => {
-    if (!tokenPreview) return 'Set token';
-    return `Token: ${tokenPreview.slice(0, 10)}…`;
-  }, [tokenPreview]);
 
   return (
     <header className="sticky top-0 z-20 border-b border-[#881c1c]/15 bg-white/60 backdrop-blur-xl">
@@ -79,12 +72,6 @@ function TopNav() {
           <NavLink className={linkClass} to="/housing-units">
             Housing
           </NavLink>
-          <NavLink className={linkClass} to="/group-housing">
-            Group housing
-          </NavLink>
-          <NavLink className={linkClass} to="/group-invitations">
-            Invite
-          </NavLink>
           <NavLink className={linkClass} to="/invitations">
             Inbox
           </NavLink>
@@ -94,22 +81,6 @@ function TopNav() {
           <NavLink className={linkClass} to="/chat">
             Chat
           </NavLink>
-          <button
-            type="button"
-            className="rounded-xl border border-[#881c1c]/20 bg-white/70 px-4 py-2 text-sm font-medium text-[#100e06]/80 transition-all hover:border-[#881c1c]/35 hover:bg-white hover:text-[#100e06]"
-            onClick={() => {
-              const next = window.prompt(
-                'Paste Bearer token (blank to clear):',
-                getBearerToken()
-              );
-              if (next === null) return;
-              const stored = setBearerToken(next);
-              setTokenPreview(stored);
-            }}
-            title="Used for calling /profile/me and /matches"
-          >
-            {tokenLabel}
-          </button>
           <button
             type="button"
             onClick={handleLogout}

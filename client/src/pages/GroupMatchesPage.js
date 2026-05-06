@@ -194,7 +194,7 @@ export default function GroupMatchesPage() {
       const g =
         data.group && typeof data.group === 'object' ? data.group : null;
       if (g) setGroupInfo(g);
-      setDeclareReadyMsg('Group declared ready for housing.');
+      setDeclareReadyMsg('Group declared ready for allotment.');
       await loadMatches(page);
       await loadAssignment();
     } catch (e) {
@@ -210,7 +210,7 @@ export default function GroupMatchesPage() {
   const groupStatusLabel = groupInfo?.status
     ? {
         forming: 'Forming',
-        ready: 'Ready for assignment',
+        ready: 'Ready for allotment',
         assigned: 'Assigned',
         archived: 'Archived',
       }[groupInfo.status] || groupInfo.status
@@ -218,7 +218,8 @@ export default function GroupMatchesPage() {
 
   const showDeclareReady =
     !assignment &&
-    groupInfo?.status === 'forming';
+    groupInfo?.status === 'forming' &&
+    groupInfo?.role === 'owner';
 
   const canAssignHousing =
     !assignment && (groupInfo == null || groupInfo.status === 'ready');
@@ -226,7 +227,7 @@ export default function GroupMatchesPage() {
   const assignBlockedReason =
     !assignment &&
     groupInfo?.status === 'forming' &&
-    'Declare the group ready (after saving housing preferences) before assigning housing.';
+    'Declare the group ready for allotment (after saving housing preferences) before assigning housing.';
 
   const unit = useMemo(
     () => normalizeUnit(assignment?.housingUnit ?? assignment?.housing_unit),
@@ -444,7 +445,7 @@ export default function GroupMatchesPage() {
             onClick={handleDeclareReady}
             className="mt-4 h-11 rounded-xl border-2 border-[#881c1c]/35 bg-white px-5 text-sm font-semibold text-[#7a0019] shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {declaringReady ? 'Declaring…' : 'Declare group ready'}
+            {declaringReady ? 'Declaring…' : 'Declare group ready for allotment'}
           </button>
         ) : null}
         {assignError ? (
@@ -454,6 +455,14 @@ export default function GroupMatchesPage() {
         ) : null}
         {assignBlockedReason && groupInfo?.status === 'forming' ? (
           <p className="mt-3 text-xs text-[#100e06]/55">{assignBlockedReason}</p>
+        ) : null}
+        {!assignment &&
+        groupInfo?.status === 'forming' &&
+        groupInfo?.role &&
+        groupInfo.role !== 'owner' ? (
+          <p className="mt-3 text-xs text-[#100e06]/55">
+            Only the group owner can mark this group ready for allotment.
+          </p>
         ) : null}
         <button
           type="button"
