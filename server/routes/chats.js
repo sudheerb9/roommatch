@@ -30,6 +30,7 @@ function normalizeParticipantIds(participantUserIds) {
     normalized.push(parsed);
   }
 
+  // Canonical ordering keeps equality checks and unique keys stable.
   return normalized.sort((a, b) => a - b);
 }
 
@@ -82,6 +83,7 @@ router.post("/", async function createOrReturnDirectChat(req, res, next) {
     const participantUserIds = [initiatorUserId, recipientUserId].sort(
       (a, b) => a - b,
     );
+    // Direction-agnostic key guarantees one direct chat per user pair.
     const directChatKey = `${participantUserIds[0]}:${participantUserIds[1]}`;
 
     let chat = await Chat.findOne({
@@ -99,6 +101,7 @@ router.post("/", async function createOrReturnDirectChat(req, res, next) {
         });
         created = true;
       } catch (error) {
+        // Concurrent create race: second request can safely fetch the winner row.
         if (!(error instanceof UniqueConstraintError)) {
           throw error;
         }
@@ -179,6 +182,7 @@ router.get("/:chatId/messages", async function listMessages(req, res, next) {
       return res.status(404).json({ error: "Chat not found" });
     }
 
+    // Enforce participant-level access at read time.
     if (!chat.participant_user_ids.includes(userId)) {
       return res.status(403).json({ error: "User is not a participant of this chat" });
     }

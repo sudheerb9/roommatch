@@ -60,6 +60,7 @@ export default function GroupMatchesPage() {
         setMeta(payload.meta || null);
         setPage(nextPage);
       } catch (requestError) {
+        // Reset stale list data so users do not act on outdated candidates.
         setItems([]);
         setMeta(null);
         setError(
@@ -107,6 +108,7 @@ export default function GroupMatchesPage() {
   }
 
   const matchesSection = (() => {
+    // Keep the page's loading/error/empty/ready states co-located for readability.
     if (loading) {
       return (
         <div className="grid min-h-[220px] place-content-center justify-items-center gap-3 rounded-3xl border border-[#881c1c]/10 bg-white/70 p-10">

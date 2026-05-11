@@ -67,6 +67,7 @@ function App() {
       <Route path="/" element={<HomeSection />} />
       <Route path="/login" element={<ProtectedLoginRoute />} />
       <Route path="/home/*" element={<HomeSection />} />
+      {/* Routes wrapped by app chrome/navigation for signed-in experience. */}
       <Route element={<AppLayout />}>
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/preferences" element={<PreferencesPage />} />

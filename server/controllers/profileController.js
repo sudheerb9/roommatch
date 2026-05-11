@@ -1,6 +1,7 @@
 const { Profile, MatchPreference, User } = require("../models");
 const { userAccountIsActive } = require("../utils/userAccount");
 
+// Profile enums describe the user's own lifestyle.
 const PROFILE_ENUMS = {
   gender: new Set([
     "cis_male",
@@ -120,6 +121,7 @@ function validateAndNormalizePatch(body) {
   const preferencePatch = {};
 
   if (touchesPreference) {
+    // Preference updates are all-or-nothing to avoid partial stale preference sets.
     for (const field of PREFERENCE_FIELDS) {
       if (!Object.prototype.hasOwnProperty.call(body, field)) {
         return {
@@ -136,6 +138,7 @@ function validateAndNormalizePatch(body) {
   }
 
   if (touchesProfileCore) {
+    // Same rule for core lifestyle fields: require a complete set when touched.
     for (const field of REQUIRED_PROFILE_KEYS) {
       if (!Object.prototype.hasOwnProperty.call(body, field)) {
         return { ok: false, error: `Missing required profile field: ${field}` };
@@ -255,6 +258,7 @@ async function updateMyProfile(req, res, next) {
       } else {
         await profile.update(slice);
       }
+      // Ensure preference row exists once a full profile is present.
       if (!(await MatchPreference.findByPk(user.id))) {
         await MatchPreference.create({ user_id: user.id });
       }

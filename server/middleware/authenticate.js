@@ -19,6 +19,7 @@ async function authenticate(req, res, next) {
     }
 
     const payload = verifyBearerToken(token);
+    // Token subject stores user email; resolve to current DB user each request.
     if (!payload.sub || typeof payload.sub !== "string") {
       return res.status(401).json({ error: "Unauthorized" });
     }

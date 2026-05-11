@@ -32,6 +32,7 @@ app.use(function corsMiddleware(req, res, next) {
   ];
 
   if (allowedOrigins.includes(origin)) {
+    // Echo only trusted origins when credentials are allowed.
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Access-Control-Allow-Credentials", "true");
   }

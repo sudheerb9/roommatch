@@ -48,6 +48,7 @@ export default function MatchesPage() {
         setMeta(payload.meta || null);
         setPage(nextPage);
       } catch (requestError) {
+        // Clear stale matches when a request fails to avoid mixing old/new pages.
         setItems([]);
         setMeta(null);
         setError(
@@ -70,6 +71,7 @@ export default function MatchesPage() {
       return;
     }
     if (profileByUserId[userId]) {
+      // Use cached profile payload when user re-expands the same candidate.
       setExpandedUserId(userId);
       return;
     }

@@ -40,6 +40,7 @@ router.get("/mine", authenticate, async function listMyInvitations(req, res, nex
 });
 
 async function reloadInvitation(invitation) {
+  // Shared reload keeps response payload shape consistent across actions.
   await invitation.reload({
     include: [
       {
@@ -114,6 +115,7 @@ router.post(
       }
 
       await sequelize.transaction(async (transaction) => {
+        // Re-check pending state in transaction to prevent double-accept races.
         const pendingInv = await GroupInvitation.findOne({
           where: {
             id: invitation.id,

@@ -37,6 +37,7 @@ export default function GroupsPage() {
       try {
         const payload = await apiFetch('/groups');
         const nextGroups = Array.isArray(payload.groups) ? payload.groups : [];
+        // Assignment lookup is best-effort so one missing assignment does not fail the page.
         const assignmentEntries = await Promise.all(
           nextGroups.map(async (group) => {
             try {
@@ -63,6 +64,7 @@ export default function GroupsPage() {
 
     loadGroups();
     return () => {
+      // Guard against state updates if the page unmounts during in-flight fetches.
       cancelled = true;
     };
   }, []);
@@ -318,6 +320,7 @@ export default function GroupsPage() {
                       setActionError('');
                       setDeclaringReadyGroupId(group.id);
                       try {
+                        // Owner action is two-step: mark ready, then run assignment.
                         await apiFetch(`/groups/${group.id}/ready`, {
                           method: 'POST',
                         });

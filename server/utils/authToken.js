@@ -8,6 +8,7 @@ function generateBearerToken(user) {
 
   return jwt.sign(
     {
+      // `sub` is the stable lookup key used by auth middleware.
       sub: user.email,
       iss: "roommatch-api",
       iat: Math.floor(Date.now() / 1000),

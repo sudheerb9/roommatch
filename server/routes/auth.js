@@ -29,6 +29,7 @@ async function authenticateSession(req, res, next) {
   try {
     const decoded = verifySessionToken(token);
     const sessionToken = decoded.sessionToken;
+    // Session table lookup enables revocation/expiry checks server-side.
     const session = await Session.findOne({
       where: { session_token: sessionToken, is_revoked: false },
     });
@@ -146,7 +147,7 @@ router.post("/callback", async (req, res, next) => {
       return res.status(400).json({ message: "Credential is required" });
     }
 
-    // Verify the Google credential JWT
+    // Verify Google-issued ID token before trusting identity claims.
     const ticket = await googleClient.verifyIdToken({
       idToken: credential,
       audience: process.env.GOOGLE_CLIENT_ID,
@@ -179,7 +180,7 @@ router.post("/callback", async (req, res, next) => {
       }
     }
 
-    // Generate bearer token for authenticated requests
+    // OAuth login path currently uses bearer token directly (no Session row).
     const bearerToken = generateBearerToken(user);
 
     return res.status(200).json({

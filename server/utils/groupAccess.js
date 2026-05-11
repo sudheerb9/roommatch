@@ -21,6 +21,7 @@ async function assertCanAccessGroup(groupIdParam, user) {
       : String(group.owner_user_id);
   const userId = typeof user.id === "bigint" ? user.id.toString() : String(user.id);
   if (ownerId === userId) {
+    // Owner has implicit access even without a separate membership lookup.
     return { ok: true, group, membership: null };
   }
 

@@ -55,6 +55,7 @@ export async function apiFetch(path, { method = 'GET', body, token } = {}) {
     headers['Content-Type'] = 'application/json';
   }
 
+  // Per-request token override is useful for auth bootstrap/login flows.
   const bearer = token !== undefined ? token : getBearerToken();
   if (bearer) {
     headers.Authorization = `Bearer ${bearer}`;

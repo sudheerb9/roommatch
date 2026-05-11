@@ -71,6 +71,7 @@ function normalizeFromApi(housing_preferences) {
   const otherAmenities = [];
 
   if (isPlainObject(p.amenities)) {
+    // Keep known amenities as toggles and preserve unknown ones as "other".
     for (const [key, value] of Object.entries(p.amenities)) {
       if (Object.prototype.hasOwnProperty.call(amenitiesSelected, key)) {
         amenitiesSelected[key] = Boolean(value);
@@ -162,6 +163,7 @@ function validateAndBuildBody(form) {
   if (otherAmenities.length > 0) {
     amenitiesObject.other = otherAmenities;
   }
+  // Send null when no amenities are selected to keep payload explicit.
   const amenities =
     Object.keys(amenitiesObject).length > 0 ? amenitiesObject : null;
 
@@ -216,6 +218,7 @@ export default function GroupHousingPreferencesPage() {
         const row = prefsPayload?.housing_preferences ?? null;
         const nextGroupName = getDisplayGroupName(groupPayload?.group?.name);
 
+        // Distinguish "no saved row yet" from a saved row containing mostly nulls.
         setHasStoredRow(Boolean(row));
         setForm(normalizeFromApi(row));
         setGroupName(nextGroupName);

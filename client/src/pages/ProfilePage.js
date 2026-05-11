@@ -134,6 +134,7 @@ export default function ProfilePage() {
     const payload = await apiFetch('/profile/me');
     const user = payload?.user || {};
     const p = payload?.profile || {};
+    // Fall back to profile presence for compatibility with older API payloads.
     const eligibleFlag =
       payload?.matching_eligible === true ||
       payload?.matching_eligible === 1 ||

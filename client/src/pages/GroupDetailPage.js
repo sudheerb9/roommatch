@@ -27,6 +27,7 @@ export default function GroupDetailPage() {
         const [groupPayload, membersPayload, assignmentPayload] = await Promise.all([
           apiFetch(`/groups/${groupId}`),
           apiFetch(`/groups/${groupId}/members`),
+          // Assignment may not exist yet; treat it as optional data.
           apiFetch(`/groups/${groupId}/assignment`).catch(() => null),
         ]);
 
@@ -51,6 +52,7 @@ export default function GroupDetailPage() {
 
     loadGroup();
     return () => {
+      // Avoid post-unmount state writes when requests resolve late.
       cancelled = true;
     };
   }, [groupId]);

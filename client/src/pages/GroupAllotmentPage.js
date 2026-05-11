@@ -5,6 +5,7 @@ import ApiErrorState from '../components/ui/ApiErrorState';
 import { apiFetch } from '../utils/api';
 
 function toAmenityList(rawAmenities) {
+  // Supports both array API responses and legacy object-shaped payloads.
   if (Array.isArray(rawAmenities)) {
     return rawAmenities.filter((item) => typeof item === 'string' && item.trim());
   }
@@ -45,6 +46,7 @@ export default function GroupAllotmentPage() {
 
     loadData();
     return () => {
+      // Prevent state updates after unmount if either request returns late.
       cancelled = true;
     };
   }, [groupId]);

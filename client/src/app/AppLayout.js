@@ -23,7 +23,7 @@ function TopNav() {
       window.localStorage.removeItem('roommatch_bearer_token');
       setBearerToken(null);
 
-      // Redirect to home
+      // Redirect even if server session cleanup fails; local token is already gone.
       navigate('/home');
     } catch (error) {
       console.error('Logout failed:', error);

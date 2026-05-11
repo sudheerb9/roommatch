@@ -51,6 +51,7 @@ function parseInviteeUserIds(raw) {
   const seen = new Set();
   for (const item of raw) {
     const n = parseInviteeUserId(item);
+    // Reject duplicates up front so batch operations stay deterministic.
     if (n == null || seen.has(n)) {
       return null;
     }
@@ -94,6 +95,7 @@ async function validateInviteeForGroup({
     return { ok: false, status: 404, error: "Invitee user not found" };
   }
 
+  // Membership in any group blocks invitation because users can belong to one group.
   const anyMembership = await GroupMember.findOne({
     where: { user_id: inviteeUserId },
     transaction,
@@ -311,6 +313,7 @@ router.get(
         }
 
         if (lockedGroup.chat_id) {
+          // Reuse existing chat when present; refresh participants if membership changed.
           const existing = await Chat.findByPk(lockedGroup.chat_id, {
             transaction,
           });
@@ -643,6 +646,7 @@ router.post(
       const skipped = [];
 
       await sequelize.transaction(async (transaction) => {
+        // Process each invite independently so invalid users are reported in `skipped`.
         for (const inviteeUserId of inviteeUserIds) {
           const validation = await validateInviteeForGroup({
             group,

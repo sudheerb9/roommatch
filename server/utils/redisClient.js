@@ -14,6 +14,7 @@ function ensureRedisConnected() {
     return Promise.resolve(redisClient);
   }
   if (!connectPromise) {
+    // Share one connect attempt across callers during startup races.
     connectPromise = redisClient.connect().then(() => redisClient);
   }
   return connectPromise;

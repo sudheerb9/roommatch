@@ -69,6 +69,7 @@ export default function ChatPage() {
       let resolvedChatId = null;
       if (conversation.type === 'direct') {
         setGroupMemberNames({});
+        // Direct chats are idempotently created/reused by this endpoint.
         const payload = await apiFetch('/chats', {
           method: 'POST',
           body: {
@@ -81,6 +82,7 @@ export default function ChatPage() {
           conversation.displayName || conversation.email || `User ${conversation.id}`
         );
       } else {
+        // Group chats use one thread per group and include member labels.
         const [chatPayload, membersPayload] = await Promise.all([
           apiFetch(`/groups/${conversation.id}/chat`),
           apiFetch(`/groups/${conversation.id}/members`),
@@ -157,6 +159,7 @@ export default function ChatPage() {
         setGroupConversations(groupRows);
 
         let initial = null;
+        // URL params can deep-link into a conversation; otherwise default first available.
         if (preselectedGroup) {
           initial =
             groupRows.find((group) => Number(group.id) === preselectedGroup) || null;
@@ -221,6 +224,7 @@ export default function ChatPage() {
       } catch {
         // Keep current state on transient polling failures.
       }
+      // Polling keeps chat usable without websocket infrastructure.
     }, 3000);
     return () => window.clearInterval(timer);
   }, [chatId, currentUserId, uiState]);

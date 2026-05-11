@@ -1,5 +1,6 @@
 /** @param {Record<string, any> & { get?: Function }} invitation */
 function asInvitationResponse(invitation) {
+  // Accept either Sequelize model instances or plain rows from raw queries.
   const row = invitation.get ? invitation.get({ plain: true }) : invitation;
 
   /** @type {Record<string, any>} */

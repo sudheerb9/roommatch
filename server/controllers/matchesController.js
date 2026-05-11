@@ -8,6 +8,8 @@ async function getMatches(req, res, next) {
   try {
     const pagination = getPagination(req.query, { limit: 20, maxLimit: 50 });
     const eligible = await isMatchingEligible(req.user.id);
+    // Ineligible users still receive a successful response with empty items so
+    // the client can render a clear "complete profile" state.
     const items = eligible
       ? await getMatchedUsersForUser(req.user.id, pagination)
       : [];

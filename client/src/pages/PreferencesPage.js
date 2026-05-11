@@ -119,6 +119,7 @@ export default function PreferencesPage() {
       }
     })();
     return () => {
+      // Ignore late responses when navigating away mid-load.
       cancelled = true;
     };
   }, []);
@@ -135,6 +136,7 @@ export default function PreferencesPage() {
 
     try {
       const body = {};
+      // API expects a full preference object when updating preference fields.
       for (const key of PREFERENCE_KEYS) {
         body[key] = form[key] || 'no_preference';
       }

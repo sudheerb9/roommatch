@@ -4,6 +4,7 @@ const { config } = require("../config");
 const { userAccountIsActive } = require("../utils/userAccount");
 const { ensureRedisConnected } = require("../utils/redisClient");
 
+// Maps preference fields (viewer) to profile fields (candidate) for scoring.
 const ATTRIBUTE_PAIRS = [
   ["preferred_sleep_schedule", "sleep_schedule"],
   ["preferred_cleanliness_level", "cleanliness_level"],
@@ -15,6 +16,7 @@ const ATTRIBUTE_PAIRS = [
 ];
 
 function getZsetKey(userId) {
+  // Redis sorted set: member = candidate user id, score = compatibility.
   return `match_scores:${userId}`;
 }
 
@@ -35,6 +37,7 @@ async function isMatchingEligible(userId) {
 }
 
 async function filterMatchingEligibleUserIds(userIds) {
+  // Batch eligibility checks to avoid N+1 queries when scoring/loading pages.
   const unique = [...new Set(userIds.filter(Boolean))];
   if (unique.length === 0) {
     return new Set();
@@ -156,6 +159,7 @@ async function rebuildScoresForUserWithEveryone(viewerUserId) {
 
   const key = getZsetKey(viewerUserId);
   if (!(await isMatchingEligible(viewerUserId))) {
+    // If the viewer is no longer eligible, remove stale cached matches.
     await redis.del(key);
     return { viewerUserId, candidatesStored: 0, skipped: true };
   }
@@ -199,6 +203,8 @@ async function rebuildScoresOfEveryoneWithUser(targetUserId) {
   });
 
   if (!(await isMatchingEligible(targetUserId))) {
+    // Target user is hidden from matching: clear their own cache and remove
+    // them from every other viewer's sorted set.
     await redis.del(getZsetKey(targetUserId));
     let cleared = 0;
     for (const row of allViewerRows) {

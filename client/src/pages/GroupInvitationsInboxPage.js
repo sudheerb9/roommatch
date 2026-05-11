@@ -77,6 +77,7 @@ export default function GroupInvitationsInboxPage() {
 
   const filtered = useMemo(() => {
     const tabDef = TABS.find((t) => t.id === tab) || TABS[TABS.length - 1];
+    // Unknown statuses are shown only in "all" to avoid misclassification.
     return items.filter((inv) =>
       typeof inv.status === 'string' ? tabDef.predicate(inv.status) : false
     );

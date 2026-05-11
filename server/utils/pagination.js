@@ -7,6 +7,7 @@ function parsePositiveInt(value, defaultValue) {
 }
 
 function getPagination(query, defaults = {}) {
+  // Clamp user-provided limit so one request cannot pull unbounded rows.
   const page = parsePositiveInt(query.page, defaults.page || 1);
   const limit = Math.min(
     parsePositiveInt(query.limit, defaults.limit || 20),
@@ -21,6 +22,7 @@ function buildPaginationMeta({ page, limit, count }) {
     page,
     limit,
     count,
+    // Caller passes "items on this page", so full page implies possible next page.
     hasMore: count === limit,
   };
 }

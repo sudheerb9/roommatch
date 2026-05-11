@@ -21,6 +21,7 @@ const {
 } = require("../utils/assignmentSafety");
 const { assertCanAccessGroup } = require("../utils/groupAccess");
 
+// Normalized group shape returned by several endpoints.
 function asGroupLite(group, requesterUserId = null) {
   const ownerUserId =
     typeof group.owner_user_id === "bigint"
@@ -100,6 +101,7 @@ function scoreAmenities(preferredAmenities, unitAmenities) {
 
 function scoreHousingUnit(unit, groupSize, housingPreference) {
   const inferredCapacity = unit.bedrooms * 2;
+  // Capacity is weighted most heavily so undersized units are strongly penalized.
   const capacityScore = inferredCapacity >= groupSize ? 100 : 0;
 
   const preferredBedrooms = housingPreference?.preferred_bedrooms ?? null;
@@ -174,6 +176,7 @@ function aggregatePreferences(groupPreferences) {
     }
 
     const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+    // Tie means no clear consensus, so keep the aggregate flexible.
     if (ranked.length > 1 && ranked[0][1] === ranked[1][1]) {
       aggregate[field] = "no_preference";
     } else {
@@ -429,6 +432,7 @@ async function getGroupMatches(req, res, next) {
     );
 
     const excludedIds = new Set([...memberUserIds, ...pendingInviteeIds]);
+    // Score only users who are neither current members nor already invited.
     const candidateProfiles = await Profile.findAll({
       where: { user_id: { [Op.notIn]: [...excludedIds] } },
       attributes: [
@@ -636,6 +640,7 @@ async function assignGroupHousing(req, res, next) {
     }
 
     const assignment = await sequelize.transaction(async (transaction) => {
+      // Lock + assign in one transaction to prevent two groups claiming the same unit.
       const unit = await lockAvailableHousingUnit(winner.unit.id, transaction);
       if (!unit) {
         throw new Error("Selected housing unit is no longer available");

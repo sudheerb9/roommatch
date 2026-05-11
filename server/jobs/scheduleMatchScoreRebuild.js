@@ -5,6 +5,7 @@ function scheduleMatchScoreRebuild(userId) {
     return;
   }
   setImmediate(() => {
+    // Lazy require avoids circular import issues during app bootstrap.
     const jobs = require("./matchingJobs");
     Promise.all([
       jobs.rebuildOutgoingScoresJob(userId),

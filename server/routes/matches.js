@@ -4,6 +4,7 @@ const { getMatches } = require("../controllers/matchesController");
 
 const router = express.Router();
 
+// Authenticated user id is sourced from bearer token middleware.
 router.get("/", authenticate, getMatches);
 
 module.exports = router;

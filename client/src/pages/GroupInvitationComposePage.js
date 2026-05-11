@@ -59,7 +59,7 @@ export default function GroupInvitationComposePage() {
     let cancelled = false;
     const timer = window.setTimeout(async () => {
       setLoadingCandidates(true);
-    setBannerError('');
+      setBannerError('');
       try {
         const encodedQ = encodeURIComponent(searchText.trim());
         const payload = await apiFetch(
@@ -76,6 +76,7 @@ export default function GroupInvitationComposePage() {
         setSelectedIds((prev) => {
           const allowed = new Set(list.map((c) => Number(c.id)));
           const kept = prev.filter((id) => allowed.has(id));
+          // Keep query-string preselected invitee when still eligible.
           if (
             preselectFromQuery &&
             allowed.has(preselectFromQuery) &&
@@ -100,6 +101,7 @@ export default function GroupInvitationComposePage() {
 
     return () => {
       cancelled = true;
+      // Debounced search request cleanup.
       window.clearTimeout(timer);
     };
   }, [groupId, numericGroupIdOk, preselectFromQuery, searchText]);

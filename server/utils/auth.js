@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const { config } = require("../config");
 
 function createPasswordHash(password) {
+  // Store per-user salt so identical passwords do not share hashes.
   const salt = crypto.randomBytes(16).toString("hex");
   const hash = crypto.scryptSync(password, salt, 64).toString("hex");
   return { salt, hash };
@@ -13,6 +14,7 @@ function verifyPassword(password, salt, storedHash) {
     return false;
   }
   const calculatedHash = crypto.scryptSync(password, salt, 64).toString("hex");
+  // Constant-time comparison reduces timing side-channel leakage.
   return crypto.timingSafeEqual(
     Buffer.from(calculatedHash, "hex"),
     Buffer.from(storedHash, "hex"),
