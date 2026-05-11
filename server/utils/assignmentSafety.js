@@ -1,6 +1,6 @@
 const { GroupAssignment, HousingUnit } = require("../models");
 
-async function getAssignedGroupHousing(groupId) {
+function getAssignedGroupHousing(groupId) {
   return GroupAssignment.findOne({
     where: { group_id: groupId, status: "assigned" },
     include: [{ model: HousingUnit, as: "housingUnit" }],
@@ -8,18 +8,19 @@ async function getAssignedGroupHousing(groupId) {
   });
 }
 
-async function lockAvailableHousingUnit(unitId, transaction) {
-  const unit = await HousingUnit.findByPk(unitId, {
+function lockAvailableHousingUnit(unitId, transaction) {
+  return HousingUnit.findByPk(unitId, {
     transaction,
     lock: transaction.LOCK.UPDATE,
+  }).then((unit) => {
+    if (!unit || !unit.is_available) {
+      return null;
+    }
+    return unit;
   });
-  if (!unit || !unit.is_available) {
-    return null;
-  }
-  return unit;
 }
 
-async function createGroupAssignment(groupId, unitId, transaction) {
+function createGroupAssignment(groupId, unitId, transaction) {
   return GroupAssignment.create(
     {
       group_id: groupId,
@@ -31,7 +32,7 @@ async function createGroupAssignment(groupId, unitId, transaction) {
   );
 }
 
-async function markHousingUnitUnavailable(unit, transaction) {
+function markHousingUnitUnavailable(unit, transaction) {
   return unit.update({ is_available: false }, { transaction });
 }
 
