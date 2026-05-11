@@ -1,7 +1,7 @@
 const pino = require("pino");
 const { config } = require("../config");
 
-const logger = pino({
+const options = {
   level: config.logging.level,
   formatters: {
     level(label) {
@@ -10,10 +10,13 @@ const logger = pino({
   },
   timestamp: pino.stdTimeFunctions.isoTime,
   base: { env: config.nodeEnv },
-  transport: {
+};
+if (config.nodeEnv !== "test") {
+  options.transport = {
     target: "pino-pretty",
     options: { colorize: true, translateTime: "SYS:standard" },
-  },
-});
+  };
+}
+const logger = pino(options);
 
 module.exports = { logger };

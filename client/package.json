@@ -28,9 +28,24 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "test:coverage": "react-scripts test --coverage --watchAll=false",
+    "test:e2e": "playwright test",
+    "test:e2e:install": "node scripts/install-playwright-chromium.cjs",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report",
     "eject": "react-scripts eject",
     "lint": "eslint .",
     "format": "prettier --write ."
+  },
+  "jest": {
+    "moduleNameMapper": {
+      "^react-router-dom$": "<rootDir>/node_modules/react-router-dom/dist/index.js",
+      "^react-router/dom$": "<rootDir>/node_modules/react-router/dist/development/dom-export.js",
+      "^react-router$": "<rootDir>/node_modules/react-router/dist/development/index.js"
+    },
+    "transformIgnorePatterns": [
+      "/node_modules/(?!((react-router|react-router-dom)/)/)"
+    ]
   },
   "eslintConfig": {
     "extends": [
@@ -51,6 +66,7 @@
     ]
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "prettier": "^3.8.1"
   }
 }
