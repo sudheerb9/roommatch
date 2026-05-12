@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import App from './App';
 
@@ -111,4 +112,32 @@ test('shows matches page title', async () => {
   expect(
     await screen.findByRole('heading', { name: /your matches/i }),
   ).toBeInTheDocument();
+});
+
+test('home Get Started goes to login when unauthenticated', async () => {
+  window.localStorage.clear();
+  render(
+    <MemoryRouter initialEntries={['/home']}>
+      <App />
+    </MemoryRouter>,
+  );
+
+  await userEvent.click(
+    await screen.findByRole('button', { name: /^get started$/i }),
+  );
+  expect(await screen.findByText(/welcome back/i)).toBeInTheDocument();
+});
+
+test('home Get Started goes to profile when token is present', async () => {
+  window.localStorage.setItem('roommatch_bearer_token', 'unit-test-token');
+  render(
+    <MemoryRouter initialEntries={['/home']}>
+      <App />
+    </MemoryRouter>,
+  );
+
+  await userEvent.click(
+    await screen.findByRole('button', { name: /^get started$/i }),
+  );
+  expect(await screen.findByText(/profile view/i)).toBeInTheDocument();
 });
