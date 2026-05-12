@@ -1,3 +1,4 @@
+// Client utility helpers used by authHelper workflows.
 /**
  * Check if user has a valid bearer token in localStorage
  * @returns {boolean} true if token exists, false otherwise

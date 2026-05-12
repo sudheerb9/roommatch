@@ -1,3 +1,4 @@
+// Shared helper utilities for groupAccess operations.
 const { Group, GroupMember } = require("../models");
 
 /**

@@ -1,3 +1,4 @@
+// Reusable UI component for the how-it-works interface element.
 import { ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import { steps } from '../../constants/constants';

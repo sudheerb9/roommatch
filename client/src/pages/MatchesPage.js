@@ -1,3 +1,4 @@
+// Page-level container for MatchesPage view state and user interactions.
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../utils/api';

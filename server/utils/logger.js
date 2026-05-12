@@ -1,3 +1,4 @@
+// Shared helper utilities for logger operations.
 const pino = require("pino");
 const { config } = require("../config");
 

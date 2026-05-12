@@ -1,3 +1,4 @@
+// Registers auth HTTP routes and applies route-level middleware.
 const express = require("express");
 const { OAuth2Client } = require("google-auth-library");
 const { User, Session } = require("../models");
@@ -34,6 +35,7 @@ async function authenticateSession(req, res, next) {
       where: { session_token: sessionToken, is_revoked: false },
     });
 
+    // Reject tokens whose backing DB session is revoked or naturally expired.
     if (!session || session.expires_at < new Date()) {
       return res.status(401).json({ message: "Session expired or invalid" });
     }
@@ -74,6 +76,7 @@ router.post("/register", async (req, res, next) => {
       password_hash: hash,
     });
 
+    // Persist server-side session so individual tokens can be revoked later.
     const sessionToken = createSessionToken();
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     await Session.create({
@@ -108,6 +111,7 @@ router.post("/login", async (req, res, next) => {
     }
 
     const user = await User.findOne({ where: { email } });
+    // Keep failure reason generic to avoid leaking which emails are registered.
     if (
       !user ||
       !user.password_hash ||
@@ -167,7 +171,7 @@ router.post("/callback", async (req, res, next) => {
       // Check if email already exists (from email/password signup)
       const existingUser = await User.findOne({ where: { email } });
       if (existingUser) {
-        // Update existing user with google_sub
+        // Link Google identity to the existing local account.
         await existingUser.update({ google_sub: googleSub });
         user = existingUser;
       } else {

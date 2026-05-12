@@ -1,3 +1,4 @@
+// Page-level container for SignupPage view state and user interactions.
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SignupForm from '../components/custom/SignupForm';

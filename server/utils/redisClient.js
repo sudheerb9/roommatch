@@ -1,3 +1,4 @@
+// Shared helper utilities for redisClient operations.
 const { createClient } = require("redis");
 const { config } = require("../config");
 const { logger } = require("./logger");

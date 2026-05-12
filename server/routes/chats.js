@@ -1,3 +1,4 @@
+// Registers chats HTTP routes and applies route-level middleware.
 const express = require("express");
 const { Op, UniqueConstraintError } = require("sequelize");
 

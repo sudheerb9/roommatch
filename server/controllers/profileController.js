@@ -1,3 +1,4 @@
+// Handles profile domain request workflows for API responses.
 const { Profile, MatchPreference, User } = require("../models");
 const { userAccountIsActive } = require("../utils/userAccount");
 

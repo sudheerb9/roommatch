@@ -1,3 +1,4 @@
+// Registers housingUnits HTTP routes and applies route-level middleware.
 const express = require("express");
 const { authenticate } = require("../middleware/authenticate");
 const { listHousingUnits } = require("../controllers/housingController");

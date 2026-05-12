@@ -1,3 +1,4 @@
+// Handles housing domain request workflows for API responses.
 const { Op } = require("sequelize");
 const { HousingUnit } = require("../models");
 const { getPagination, buildPaginationMeta } = require("../utils/pagination");

@@ -1,3 +1,4 @@
+// Shared helper utilities for assignmentSafety operations.
 const { GroupAssignment, HousingUnit } = require("../models");
 
 function getAssignedGroupHousing(groupId) {

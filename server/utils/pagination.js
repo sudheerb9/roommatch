@@ -1,3 +1,4 @@
+// Shared helper utilities for pagination operations.
 function parsePositiveInt(value, defaultValue) {
   const parsed = parseInt(value, 10);
   if (isNaN(parsed) || parsed <= 0) {

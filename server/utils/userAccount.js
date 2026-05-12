@@ -1,3 +1,4 @@
+// Shared helper utilities for userAccount operations.
 /**
  * @param {import("sequelize").Model | { is_active?: unknown } | null | undefined} user
  * @returns {boolean}

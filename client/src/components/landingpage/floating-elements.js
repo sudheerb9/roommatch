@@ -1,3 +1,4 @@
+// Reusable UI component for the floating-elements interface element.
 import { motion } from 'motion/react';
 
 const FloatingElements = () => {

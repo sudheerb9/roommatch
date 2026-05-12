@@ -1,3 +1,4 @@
+// Provides groupAuthorization middleware for request authorization and safety checks.
 const { assertCanAccessGroup } = require("../utils/groupAccess");
 
 async function authorizeGroupAccess(req, res, next) {

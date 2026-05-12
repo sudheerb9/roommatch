@@ -1,3 +1,4 @@
+// Root app component responsible for top-level routing setup.
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import './App.css';
 import AppLayout from './app/AppLayout';

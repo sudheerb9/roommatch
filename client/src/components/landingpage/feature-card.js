@@ -1,3 +1,4 @@
+// Reusable UI component for the feature-card interface element.
 import { motion } from 'motion/react';
 import { Link } from 'react-router-dom';
 

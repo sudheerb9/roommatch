@@ -1,3 +1,4 @@
+// Shared helper utilities for authToken operations.
 const jwt = require("jsonwebtoken");
 const { config } = require("../config");
 

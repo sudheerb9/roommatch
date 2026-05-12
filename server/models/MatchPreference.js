@@ -1,3 +1,4 @@
+// Defines the MatchPreference Sequelize model schema and relationships.
 const { DataTypes } = require("sequelize");
 
 /**

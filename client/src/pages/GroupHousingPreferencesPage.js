@@ -1,3 +1,4 @@
+// Page-level container for GroupHousingPreferencesPage view state and user interactions.
 import { useCallback, useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';

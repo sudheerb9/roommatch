@@ -1,3 +1,4 @@
+// Schedules and runs scheduleMatchScoreRebuild background job workflows.
 const { logger } = require("../utils/logger");
 
 function scheduleMatchScoreRebuild(userId) {

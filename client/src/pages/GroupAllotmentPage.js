@@ -1,3 +1,4 @@
+// Page-level container for GroupAllotmentPage view state and user interactions.
 import { ArrowLeft, Building2, CheckCircle2, Home } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
@@ -29,6 +30,7 @@ export default function GroupAllotmentPage() {
 
     async function loadData() {
       try {
+        // Load group label and assignment in parallel for faster initial paint.
         const [groupPayload, assignmentPayload] = await Promise.all([
           apiFetch(`/groups/${groupId}`),
           apiFetch(`/groups/${groupId}/assignment`),

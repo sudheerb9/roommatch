@@ -1,3 +1,4 @@
+// Shared front-end constants used across multiple screens.
 import {
   ClipboardCheck,
   MessageCircle,

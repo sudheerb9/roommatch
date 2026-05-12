@@ -1,3 +1,4 @@
+// Browser entrypoint that mounts the React application.
 import './index.css';
 import { mountApp } from './bootstrapRoot';
 import reportWebVitals from './reportWebVitals';

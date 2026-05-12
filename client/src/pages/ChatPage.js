@@ -1,3 +1,4 @@
+// Page-level container for ChatPage view state and user interactions.
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { apiFetch } from '../utils/api';

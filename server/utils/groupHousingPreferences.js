@@ -1,3 +1,4 @@
+// Shared helper utilities for groupHousingPreferences operations.
 const FLOOR_ENUM = new Set(["any", "low", "middle", "high"]);
 
 function isPlainObject(value) {
@@ -75,6 +76,7 @@ function validateHousingPreferencesPatch(body) {
             "preferred_bathrooms must be a non-negative decimal (max 99.9) or null",
         };
       }
+      // Normalize to one decimal place to match DB precision and response shape.
       patch.preferred_bathrooms = Math.round(raw * 10) / 10;
     }
   }
@@ -90,6 +92,7 @@ function validateHousingPreferencesPatch(body) {
           'preferred_floor must be one of: any, low, middle, high, or null',
       };
     } else {
+      // Trim client input so " low " still maps to the same enum value.
       const t = v.trim();
       if (!FLOOR_ENUM.has(t)) {
         return {
@@ -129,6 +132,7 @@ function asHousingPreferencesResponse(pref) {
       row.preferred_bedrooms === null || row.preferred_bedrooms === undefined
         ? null
         : Number(row.preferred_bedrooms),
+    // Return as string to preserve fixed decimal formatting expected by the UI.
     preferred_bathrooms:
       row.preferred_bathrooms === null || row.preferred_bathrooms === undefined
         ? null

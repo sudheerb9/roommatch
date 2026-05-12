@@ -1,3 +1,4 @@
+// Reusable UI component for the AuthForm interface element.
 import { GoogleLogin } from '@react-oauth/google';
 import { Loader2 } from 'lucide-react';
 import { useRef, useState } from 'react';
@@ -17,6 +18,7 @@ const AuthForm = ({ onLoginClick }) => {
     setError('');
 
     try {
+      // Exchange Google credential for API token before navigating into protected pages.
       const response = await fetch('http://localhost:3001/auth/callback', {
         method: 'POST',
         headers: {
@@ -33,6 +35,7 @@ const AuthForm = ({ onLoginClick }) => {
         return;
       }
 
+      // Keep both legacy and centralized token paths in sync.
       window.localStorage.setItem('roommatch_bearer_token', data.token);
       setBearerToken(data.token);
       navigate('/profile');
@@ -44,6 +47,7 @@ const AuthForm = ({ onLoginClick }) => {
   };
 
   const handleButtonClick = () => {
+    // Trigger the hidden Google button so we can keep custom styling.
     if (googleLoginRef.current) {
       googleLoginRef.current.querySelector('div[role="button"]')?.click();
     }

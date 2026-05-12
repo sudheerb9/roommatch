@@ -1,6 +1,8 @@
+// Client utility helpers used by api workflows.
 const DEFAULT_API_BASE_URL = 'http://localhost:3001';
 
 export function getApiBaseUrl() {
+  // Prefer explicit env override, fall back to local dev API.
   return (
     process.env.REACT_APP_API_BASE_URL ||
     process.env.REACT_APP_API_BASE_URL?.trim() ||
@@ -15,6 +17,7 @@ export function getBearerToken() {
   }
 
   try {
+    // LocalStorage access can throw in non-browser contexts/tests.
     const raw = localStorage.getItem('roommatch_bearer_token');
     return raw ? String(raw).trim() : '';
   } catch {
@@ -74,6 +77,7 @@ export async function apiFetch(path, { method = 'GET', body, token } = {}) {
       payload && typeof payload === 'object' && payload.error
         ? payload.error
         : `Request failed (${res.status})`;
+    // Enrich thrown errors so pages can branch on status and payload details.
     const err = new Error(message);
     err.status = res.status;
     err.payload = payload;

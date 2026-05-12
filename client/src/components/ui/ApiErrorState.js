@@ -1,3 +1,4 @@
+// Reusable UI component for the ApiErrorState interface element.
 import { Link } from 'react-router-dom';
 
 export default function ApiErrorState({

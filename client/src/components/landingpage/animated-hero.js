@@ -1,3 +1,4 @@
+// Reusable UI component for the animated-hero interface element.
 import { Search, Zap } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Button } from '../ui/button';

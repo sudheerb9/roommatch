@@ -1,3 +1,4 @@
+// Page-level container for GroupMatchesPage view state and user interactions.
 import { ArrowLeft } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';

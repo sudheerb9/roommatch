@@ -1,3 +1,4 @@
+// Page-level container for HousingUnitsPage view state and user interactions.
 import { useEffect, useMemo, useState } from 'react';
 import ApiErrorState from '../components/ui/ApiErrorState';
 import { apiFetch } from '../utils/api';

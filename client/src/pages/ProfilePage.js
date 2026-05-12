@@ -1,3 +1,4 @@
+// Page-level container for ProfilePage view state and user interactions.
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiFetch } from '../utils/api';

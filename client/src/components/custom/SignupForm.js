@@ -1,3 +1,4 @@
+// Reusable UI component for the SignupForm interface element.
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '../ui/button';
@@ -15,6 +16,7 @@ const SignupForm = ({ onSuccess }) => {
     setError('');
 
     try {
+      // Registration immediately returns an auth token for post-signup onboarding.
       const response = await fetch('http://localhost:3001/auth/register', {
         method: 'POST',
         headers: {
@@ -33,6 +35,7 @@ const SignupForm = ({ onSuccess }) => {
         return;
       }
 
+      // Persist token for existing flows that still read roommatch_token.
       window.localStorage.setItem('roommatch_token', data.token);
       onSuccess?.(data);
     } catch (err) {

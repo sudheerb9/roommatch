@@ -1,3 +1,4 @@
+// Handles groups domain request workflows for API responses.
 const { Op } = require("sequelize");
 const {
   sequelize,
@@ -175,6 +176,7 @@ function aggregatePreferences(groupPreferences) {
       continue;
     }
 
+    // Majority vote per field gives the group-level preference baseline.
     const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1]);
     // Tie means no clear consensus, so keep the aggregate flexible.
     if (ranked.length > 1 && ranked[0][1] === ranked[1][1]) {
@@ -225,6 +227,7 @@ async function listUserGroups(req, res, next) {
             group: ["group_id"],
             raw: true,
           });
+    // Aggregate counts separately to avoid over-counting from joined owner/member rows.
     const memberCountByGroupId = new Map(
       memberCounts.map((row) => [String(row.group_id), Number(row.member_count) || 0]),
     );
@@ -421,6 +424,7 @@ async function getGroupMatches(req, res, next) {
       where: { user_id: { [Op.in]: memberUserIds } },
       attributes: ["user_id", ...PREFERENCE_FIELDS],
     });
+    // Candidate scoring compares each user profile against this synthesized preference row.
     const aggregatePreference = aggregatePreferences(memberPreferences);
 
     const pendingInvitations = await GroupInvitation.findAll({
@@ -479,6 +483,7 @@ async function getGroupMatches(req, res, next) {
         };
       })
       .filter(Boolean)
+      // Apply the same threshold as individual matching for consistent behavior.
       .filter((item) => item.score >= threshold)
       .sort((a, b) => b.score - a.score || a.user_id - b.user_id);
 
@@ -530,6 +535,7 @@ async function declareGroupReady(req, res, next) {
         .json({ error: "Only the group owner may declare readiness." });
     }
 
+    // Idempotent success keeps retries safe for clients and job workers.
     if (group.status === "ready") {
       return res.status(200).json({ group: asGroupLite(group, req.user.id) });
     }
@@ -627,6 +633,7 @@ async function assignGroupHousing(req, res, next) {
         .json({ error: "No available housing units for assignment" });
     }
 
+    // Deterministic tie-break by id ensures stable winners for equal scores.
     const ranked = availableUnits
       .map((unit) => ({
         unit,

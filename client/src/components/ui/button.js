@@ -1,3 +1,4 @@
+// Reusable UI component for the button interface element.
 
 const Button = ({ children, className = '', size = 'default', ...props }) => {
   const sizeClasses = {

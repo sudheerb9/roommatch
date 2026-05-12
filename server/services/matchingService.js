@@ -1,3 +1,4 @@
+// Implements matchingService business logic shared across handlers.
 const { Op } = require("sequelize");
 const { User, Profile, MatchPreference } = require("../models");
 const { config } = require("../config");
@@ -85,10 +86,12 @@ function computeMatchScore(viewerPreference, candidateProfile) {
       ? normEnum(candidateProfile[profileField])
       : null;
 
+    // Missing or "no_preference" means this attribute should not penalize anyone.
     if (!prefValue || prefValue === "no_preference") {
       parts.push(100);
       continue;
     }
+    // Strict preference with missing candidate data is treated as "unknown", not mismatch.
     if (profileValue == null) {
       continue;
     }
@@ -105,6 +108,7 @@ function computeMatchScore(viewerPreference, candidateProfile) {
 async function getMatchedUserIdsAndScores(viewerUserId, { limit, offset }) {
   const redis = await ensureRedisConnected();
   const key = getZsetKey(viewerUserId);
+  // Use Redis-side pagination so we only hydrate users for the requested page.
   const entries = await redis.zRangeWithScores(
     key,
     offset,
@@ -136,6 +140,7 @@ async function getMatchedUsersForUser(viewerUserId, { limit, offset }) {
 
   return items
     .map((item) => {
+      // Redis may still contain stale ids between rebuilds; guard at read-time.
       if (!eligibleIds.has(item.userId)) {
         return null;
       }
@@ -173,6 +178,7 @@ async function rebuildScoresForUserWithEveryone(viewerUserId) {
   const candidateIds = candidateProfiles.map((p) => Number(p.user_id));
   const eligibleCandidateIds = await filterMatchingEligibleUserIds(candidateIds);
 
+  // Replace the sorted set atomically from scratch to avoid stale score drift.
   await redis.del(key);
 
   const scored = [];
@@ -182,6 +188,7 @@ async function rebuildScoresForUserWithEveryone(viewerUserId) {
       continue;
     }
     const score = computeMatchScore(viewerPreference, candidateProfile);
+    // Keep only threshold-passing candidates in cache for cheaper reads.
     if (score >= threshold) {
       scored.push({ score, value: String(candidateProfile.user_id) });
     }
@@ -237,6 +244,7 @@ async function rebuildScoresOfEveryoneWithUser(targetUserId) {
       continue;
     }
     const score = computeMatchScore(viewerPreference, targetProfile);
+    // Upsert or remove one target member per viewer to keep each zset authoritative.
     if (score >= threshold) {
       await redis.zAdd(key, [{ score, value: String(targetUserId) }]);
     } else {

@@ -1,3 +1,4 @@
+// Schedules and runs matchingJobs background job workflows.
 const {
   rebuildScoresForUserWithEveryone,
   rebuildScoresOfEveryoneWithUser,

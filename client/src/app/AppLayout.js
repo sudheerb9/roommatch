@@ -1,3 +1,4 @@
+// Application shell wiring shared layout and navigation behavior.
 import { LogOut } from 'lucide-react';
 import { useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';

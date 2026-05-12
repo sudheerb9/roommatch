@@ -1,3 +1,4 @@
+// Page-level container for GroupInvitationsInboxPage view state and user interactions.
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '../utils/api';
 

@@ -1,3 +1,4 @@
+// Defines the Profile Sequelize model schema and relationships.
 const { DataTypes } = require("sequelize");
 
 /**

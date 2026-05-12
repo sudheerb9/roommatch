@@ -1,3 +1,4 @@
+// Shared helper utilities for auth operations.
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const { config } = require("../config");

@@ -1,3 +1,4 @@
+// Reusable UI component for the LandingBackdrop interface element.
 /**
  * Same soft burgundy blob layer as the marketing home page, for app shell pages.
  */

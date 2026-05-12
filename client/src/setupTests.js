@@ -1,3 +1,4 @@
+// Test environment setup for Jest DOM assertions.
 // react-router v7 expects TextEncoder in environments where the Jest/jsdom
 // global is missing it (see react-router dist when loaded under CRA).
 import { TextDecoder, TextEncoder } from 'util';

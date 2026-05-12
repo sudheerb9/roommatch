@@ -1,3 +1,4 @@
+// Initializes Sequelize models and wires model associations.
 const { Sequelize } = require("sequelize");
 const { config } = require("../config");
 const { logger } = require("../utils/logger");

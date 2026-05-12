@@ -1,3 +1,4 @@
+// Page-level container for LoginPage view state and user interactions.
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { ArrowLeft } from 'lucide-react';
 import AuthForm from '../components/custom/AuthForm';

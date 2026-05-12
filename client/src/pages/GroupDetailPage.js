@@ -1,3 +1,4 @@
+// Page-level container for GroupDetailPage view state and user interactions.
 import { ArrowLeft } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';

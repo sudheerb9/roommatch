@@ -1,3 +1,4 @@
+// Page-level container for GroupInvitationComposePage view state and user interactions.
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';

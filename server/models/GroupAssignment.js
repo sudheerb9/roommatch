@@ -1,3 +1,4 @@
+// Defines the GroupAssignment Sequelize model schema and relationships.
 const { DataTypes } = require("sequelize");
 
 /** @param {import("sequelize").Sequelize} sequelize */

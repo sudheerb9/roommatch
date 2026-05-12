@@ -1,3 +1,4 @@
+// Page-level container for HomePage view state and user interactions.
 import { motion } from 'motion/react';
 import AnimatedHero from '../components/landingpage/animated-hero';
 import FeatureCard from '../components/landingpage/feature-card';
