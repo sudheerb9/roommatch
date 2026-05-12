@@ -2,6 +2,8 @@
 
 Web app that helps students find compatible roommates from lifestyle profiles and preferences, form private groups, coordinate invitations, and align group housing preferences with automated unit assignment.
 
+**Production build & deployment:** see **[BUILD.md](./BUILD.md)** (this README focuses on local setup, env vars, testing, and client production build commands).
+
 **Where to run commands:** open a terminal in this **`roommatch/`** directory (the folder that contains `client/` and `server/`). If you cloned the parent repo, run **`cd roommatch`** first.
 
 ## Quick setup
