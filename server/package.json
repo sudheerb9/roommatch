@@ -3,13 +3,14 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www",
+    "start": "node --require ./instrument.cjs ./bin/www",
     "test": "jest",
     "test:coverage": "jest --coverage",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@autter/runtime-node": "^1.0.0",
     "cookie-parser": "~1.4.4",
     "cors": "^2.8.6",
     "debug": "~2.6.9",

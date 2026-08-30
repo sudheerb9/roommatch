@@ -5,6 +5,7 @@ const path = require("path");
 const cookieParser = require("cookie-parser");
 const pinoHttp = require("pino-http");
 
+const { createBrowserRelayHandler } = require("@autter/runtime-node");
 const { logger } = require("./utils/logger");
 const indexRouter = require("./routes/index");
 const matchesRouter = require("./routes/matches");
@@ -68,6 +69,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
+
+if (process.env.AUTTER_RUNTIME_KEY) {
+  app.post(
+    "/api/autter-runtime",
+    createBrowserRelayHandler({
+      apiKey: process.env.AUTTER_RUNTIME_KEY,
+      endpoint: process.env.AUTTER_ENDPOINT || "https://otlp.autter.dev",
+    }),
+  );
+}
 
 app.use("/", indexRouter);
 app.use("/matches", matchesRouter);
